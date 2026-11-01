@@ -1,0 +1,42 @@
+{
+  "name": "Jane Doe",
+  "standard_headline": "Senior Frontend Engineer | TypeScript, React & Next.js | Design Systems",
+  "upload_basename": "Jane-Doe-Resume",
+
+  "contact_lines": [
+    [
+      { "icon": "🌐", "text": "janedoe.dev", "url": "https://janedoe.dev" },
+      { "icon": "📧", "text": "jane.doe@example.com", "url": "mailto:jane.doe@example.com" }
+    ],
+    [
+      { "text": "LinkedIn", "url": "https://www.linkedin.com/in/janedoe" },
+      { "text": "GitHub", "url": "https://github.com/janedoe" }
+    ]
+  ],
+
+  "link_labels": {
+    "View Paper": "https://arxiv.org/abs/0000.00000",
+    "Youtube": "https://www.youtube.com/@janedoe"
+  },
+
+  "company_projects": {
+    "Northwind Health": "https://northwind.example.com/product",
+    "Acme Logistics": "https://acme.example.com"
+  },
+
+  "company_websites": {
+    "Northwind Health": "https://northwind.example.com",
+    "Acme Logistics": "https://acme.example.com",
+    "Blue Fern Studio": "https://bluefern.example.com"
+  },
+
+  "company_about": {
+    "Northwind Health": "Clinical documentation SaaS used by 300+ outpatient clinics.",
+    "Acme Logistics": "Route planning and dispatch software for regional delivery fleets.",
+    "Blue Fern Studio": "Agency building e-commerce storefronts for consumer brands."
+  },
+
+  "auto_bold": true,
+  "bold_terms": ["design system", "Core Web Vitals"],
+  "summary_bold_phrases": ["\\d+\\+\\s*years"]
+}
