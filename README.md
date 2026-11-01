@@ -240,7 +240,11 @@ same as reviewing them: use `--visual-reviewed "notes"` only after someone has l
 every page. None of these checks certifies how a particular ATS will read the resume.
 
 `outreach.py check` catches unresolved placeholders, missing subject lines, messages over
-the length budget, and "I have applied" wording before a submission is confirmed.
+the length budget, and "I have applied" wording before a submission is confirmed. It also
+warns, without failing, about generic openers, buzzwords, and messages that ask several
+things at once. `--channel cover-letter` applies the same checks to a letter, counted in
+words. Direct-message budgets follow LinkedIn's InMail data: aim under 400 characters, and
+the check fails a message over 800.
 `applications.py submit` records a submission you already made; it never submits
 anything. Outcome rates count only submitted applications, and a handful of applications
 cannot show what caused a result.
@@ -286,6 +290,9 @@ point, not a universal rule:
 - [Greenhouse parsing](https://support.greenhouse.io/hc/en-us/articles/200989175-Unsuccessful-resume-parse): formatting-related extraction failures; not a universal scoring specification.
 - [Greenhouse filtering](https://support.greenhouse.io/hc/en-us/articles/27104809835291-Talent-Filtering): exact keyword filtering exists; it does not establish universal ATS ranking weights.
 - [MIT networking](https://capd.mit.edu/resources/using-ai-for-networking/): specific, concise messages and clear requests.
+- [LinkedIn InMail data](https://www.linkedin.com/business/talent/blog/talent-strategy/these-inmails-get-best-response-rates): recruiter InMails under 400 characters drew 22% more replies than average, and individually written ones about 15% more than bulk sends; observational averages, recruiter-to-candidate direction.
+- [ResumeGo cover letter experiment](https://www.resumego.net/research/cover-letters/): tailored letters drew 53% more callbacks than no letter, generic ones little more; a vendor study, not peer-reviewed.
+- [Cui, Dias & Ye](https://arxiv.org/abs/2509.25054) and [Galdin & Silbert](https://arxiv.org/abs/2511.08785): after AI writing tools spread, matching a letter to the posting stopped distinguishing candidates; preprints from one kind of online labor platform.
 - [OPM work samples](https://www.opm.gov/policy-data-oversight/assessment-and-selection/other-assessment-methods/work-samples-and-simulations/): job-relevant demonstrations assess competencies; unsolicited portfolio benefits remain an inference.
 - [NBER writing-assistance study](https://www.nber.org/papers/w30886): an 8% relative hiring increase in one online-labor-market experiment, not a guarantee for this kit.
 
