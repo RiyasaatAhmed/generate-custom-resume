@@ -91,11 +91,16 @@ def run_chrome(*args: str, output: Path) -> None:
     """
     output.unlink(missing_ok=True)
     with tempfile.TemporaryDirectory(prefix="resume-kit-chrome-") as profile:
-        result = subprocess.run(
-            [find_chrome(), "--headless=new", "--disable-gpu", f"--user-data-dir={profile}", *args],
-            capture_output=True,
-            text=True,
-        )
+        try:
+            result = subprocess.run(
+                [find_chrome(), "--headless=new", "--disable-gpu", f"--user-data-dir={profile}", *args],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+        except subprocess.TimeoutExpired as exc:
+            output.unlink(missing_ok=True)
+            raise RuntimeError("Chrome rendering timed out after 60 seconds") from exc
     if not (output.exists() and output.stat().st_size > 0):
         tail = "\n".join((result.stderr or result.stdout).strip().splitlines()[-5:])
         raise RuntimeError(f"Chrome exited with status {result.returncode}:\n{tail}")
