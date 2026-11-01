@@ -60,7 +60,7 @@ def pdf_checks(source: Path, pdf_path: Path, max_pages: int, cover: bool = False
                     urls.add(same_url(str(url)))
     pages = len(reader.pages)
     return {
-        "pdf_content": result(missing_content(fragments, "\n".join(texts))),
+        "pdf_content": result(missing_content(fragments, "\n".join(texts), ignore_spaces=True)),
         "pdf_links": result([f"missing PDF destination: {url}" for url in sorted({url for _, url in expected_links if same_url(url) not in urls})]),
         "pages": {**result([] if 0 < pages <= max_pages else [f"{pages} pages violates policy (1–{max_pages})"]), "count": pages, "limit": max_pages},
     }

@@ -187,6 +187,31 @@ class DocumentTests(unittest.TestCase):
         self.assertEqual(document_checks.missing_content(["workflow 35%"], "workﬂow 35%"), [])
         self.assertTrue(document_checks.missing_content(["35%"], "53%"))
 
+    def test_pdf_spacing_inside_words_is_not_missing_content(self):
+        # pypdf extracts some bold digits with a stray space ("9 2%") although the page shows "92%".
+        expected = ["design system covering 92% of screens."]
+        extracted = "design system covering 9 2% of\nscreens."
+        self.assertEqual(document_checks.missing_content(expected, extracted, ignore_spaces=True), [])
+        self.assertTrue(document_checks.missing_content(expected, extracted))  # DOCX comparison stays exact
+        for actual in ("covering 9 3% of screens.", "design covering 92% of screens.", ""):
+            with self.subTest(actual=actual):
+                self.assertTrue(document_checks.missing_content(expected, actual, ignore_spaces=True))
+
+    def test_bold_percentages_pass_pdf_content_check(self):
+        try:
+            import pypdf  # noqa: F401
+            kit.find_chrome()
+        except (ImportError, FileNotFoundError, RuntimeError):
+            self.skipTest("needs pypdf and Chrome")
+        base = (ROOT / "assets/profile/base-resume.example.md").read_text()
+        source = self.path / "resume.md"
+        source.write_text(base.replace(
+            "- Built a **50-component** design system with **Storybook** docs used by **3 squads**.",
+            "- Built a design system covering **92%** of screens with **97%** adoption."), encoding="utf-8")
+        md_to_pdf.convert(source, source.with_suffix(".pdf"))
+        report = qa.pdf_checks(source, source.with_suffix(".pdf"), max_pages=2)
+        self.assertEqual(report["pdf_content"]["status"], "pass", report["pdf_content"])
+
     def test_pdf_url_equivalence_is_narrow(self):
         self.assertEqual(qa.same_url("https://janedoe.dev"), qa.same_url("https://janedoe.dev/"))
         self.assertEqual(qa.same_url("HTTPS://Example.COM/a"), qa.same_url("https://example.com/a"))

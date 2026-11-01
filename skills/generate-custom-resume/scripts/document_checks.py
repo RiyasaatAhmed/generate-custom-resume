@@ -82,10 +82,18 @@ def source_inventory(path: Path, cover: bool = False) -> tuple[list[str], set[tu
     return [fragment for fragment in fragments if fragment], targets
 
 
-def missing_content(expected: list[str], actual: str) -> list[str]:
-    flat = normalize(actual)
-    counts = Counter(normalize(item) for item in expected)
-    return [f"missing content ({count} occurrence(s)): {text!r}"
+def missing_content(expected: list[str], actual: str, ignore_spaces: bool = False) -> list[str]:
+    """Report expected fragments that `actual` does not contain often enough.
+
+    PDF text extraction can insert spaces inside a word: pypdf reads some bold digits as
+    "9 2%" although the page shows "92%". `ignore_spaces` compares with all whitespace
+    removed, so a missing or changed character still fails but stray spacing does not.
+    """
+    key = (lambda text: re.sub(r"\s+", "", normalize(text))) if ignore_spaces else normalize
+    flat = key(actual)
+    counts = Counter(key(item) for item in expected)
+    shown = {key(item): normalize(item) for item in expected}
+    return [f"missing content ({count} occurrence(s)): {shown[text]!r}"
             for text, count in counts.items() if flat.count(text) < count]
 
 
