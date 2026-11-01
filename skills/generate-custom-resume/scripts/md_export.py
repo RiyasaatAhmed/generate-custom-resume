@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export resume markdown to styled docx and linked pdf."""
+"""Export resume or cover-letter Markdown to a styled DOCX and a PDF with working links."""
 from __future__ import annotations
 
 import argparse
@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         default=DEFAULT_TEMPLATE,
         help=f"Base docx template (default: {DEFAULT_TEMPLATE})",
     )
-    parser.add_argument("--cover", action="store_true", help="Export a cover letter (not a resume)")
+    parser.add_argument("--cover", action="store_true", help="Treat the input as a cover letter rather than a resume")
     formats = parser.add_mutually_exclusive_group()
     formats.add_argument("--docx-only", action="store_true")
     formats.add_argument("--pdf-only", action="store_true")

@@ -6,7 +6,7 @@
 
 Usage:
   python3 scripts/outreach.py bold "Design Systems"
-  python3 scripts/outreach.py check applications/<id>/outreach/email.txt --channel email
+  python3 scripts/outreach.py check ~/resume-kit/applications/<id>/outreach/email.txt --channel email
 """
 from __future__ import annotations
 
@@ -96,9 +96,9 @@ def main(argv: list[str] | None = None) -> int:
     c = sub.add_parser("check")
     c.add_argument("file", type=Path)
     c.add_argument("--channel", choices=CHANNEL_LIMITS, default="legacy")
-    c.add_argument("--limit", type=int, help="Override the editorial message budget")
-    c.add_argument("--draft", action="store_true", help="Allow unresolved placeholders; not send-ready")
-    c.add_argument("--application", type=Path, help="application.json with confirmed submission time")
+    c.add_argument("--limit", type=int, help="Maximum length in codepoints, replacing the channel default")
+    c.add_argument("--draft", action="store_true", help="Allow unresolved placeholders; the message is not ready to send")
+    c.add_argument("--application", type=Path, help="The application.json whose applied_at confirms submission; required for 'I have applied' wording")
     args = parser.parse_args(argv)
     if args.cmd == "bold":
         print(bold(" ".join(args.text)))

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Validate evidence structure and references. This does not verify real-world truth."""
+"""Validate the structure and references of an achievement bank or evidence map.
+
+It cannot tell whether a claim is true; that review stays with the agent and candidate."""
 from __future__ import annotations
 import argparse
 import json

@@ -1,4 +1,4 @@
-"""Hyperlink registry and auto-bold rules, driven by profile/profile.json."""
+"""Hyperlink registry and auto-bold rules, driven by the candidate's profile.json."""
 from __future__ import annotations
 
 import html

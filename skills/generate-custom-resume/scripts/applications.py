@@ -197,7 +197,7 @@ def main(argv=None) -> int:
     verify = sub.add_parser("verify")
     verify.add_argument("directory", type=Path)
     summary = sub.add_parser("summary")
-    summary.add_argument("root", type=Path, nargs="?", help="Applications folder (default: data home)")
+    summary.add_argument("root", type=Path, nargs="?", help="Applications folder (default: <RESUME_KIT_HOME or ~/resume-kit>/applications)")
     summary.add_argument("--group-by", choices=("role_family", "geography", "channel"))
     args = parser.parse_args(argv)
     try:

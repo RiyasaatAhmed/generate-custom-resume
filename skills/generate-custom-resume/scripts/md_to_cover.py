@@ -2,7 +2,7 @@
 """Convert a cover letter markdown to docx + linked pdf.
 
 Reuses the resume docx as the style source (fonts, header, hyperlink runs) so the
-cover letter matches the resume brand. Body is plain prose: header block, then one
+cover letter matches the resume's styling. Body is plain prose: header block, then one
 paragraph per blank-line-separated block, with soft line breaks inside a block.
 """
 from __future__ import annotations
