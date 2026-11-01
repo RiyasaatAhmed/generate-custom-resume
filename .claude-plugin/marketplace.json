@@ -1,0 +1,30 @@
+{
+  "name": "riyasaat-skills",
+  "owner": {
+    "name": "Riyasaat Ahmed Rahul",
+    "url": "https://github.com/RiyasaatAhmed"
+  },
+  "metadata": {
+    "description": "Career and job-search skills by Riyasaat Ahmed Rahul"
+  },
+  "plugins": [
+    {
+      "name": "generate-custom-resume",
+      "source": "./",
+      "description": "Tailor a truthful resume, cover letter, and recruiter outreach to a job post: fit assessment, evidence map, DOCX/PDF export with QA, and local application records. Never invents claims or submits for you.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "keywords": [
+        "resume",
+        "cv",
+        "cover-letter",
+        "job-search",
+        "career",
+        "ats",
+        "outreach",
+        "docx",
+        "pdf"
+      ]
+    }
+  ]
+}

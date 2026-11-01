@@ -1,0 +1,24 @@
+{
+  "name": "generate-custom-resume",
+  "displayName": "Generate Custom Resume",
+  "version": "1.0.0",
+  "description": "Tailor a truthful resume, cover letter, and recruiter outreach to a job post: fit assessment, evidence map, DOCX/PDF export with QA, and local application records. Never invents claims or submits for you.",
+  "author": {
+    "name": "Riyasaat Ahmed Rahul",
+    "url": "https://github.com/RiyasaatAhmed"
+  },
+  "homepage": "https://github.com/RiyasaatAhmed/generate-custom-resume",
+  "repository": "https://github.com/RiyasaatAhmed/generate-custom-resume",
+  "license": "MIT",
+  "keywords": [
+    "resume",
+    "cv",
+    "cover-letter",
+    "job-search",
+    "career",
+    "ats",
+    "outreach",
+    "docx",
+    "pdf"
+  ]
+}
