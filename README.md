@@ -1,16 +1,32 @@
 # generate-custom-resume
 
-An agent skill that turns a job post into a truthful, evidence-based application package. It works in Claude Code, Cursor, Antigravity, Codex, Gemini CLI, GitHub Copilot, and any other agent that reads [Agent Skills](https://agentskills.io).
+An agent skill that turns a job post into a truthful, evidence-based application. It
+works in Claude Code, Cursor, Antigravity, Codex, Gemini CLI, GitHub Copilot, and any
+other agent that reads [Agent Skills](https://agentskills.io).
 
 ```text
 /generate-custom-resume https://example.com/careers/frontend-engineer
 ```
 
-The agent assesses fit and practical eligibility, researches the employer, maps each requirement to your real achievements, writes the resume plus a cover letter or outreach when appropriate, exports DOCX and PDF, and checks that nothing was lost in export. It never invents experience, metrics, or company facts, and it never submits applications or sends messages for you. It makes relevant experience easy to evaluate; it does not guarantee an interview.
+Give it a job post and the agent:
+
+1. checks your fit and practical eligibility, such as location and work authorization;
+2. researches the employer;
+3. matches each requirement to a real achievement from your resume;
+4. writes a tailored resume, plus a cover letter or recruiter message when one fits;
+5. exports DOCX and PDF, then checks that nothing was lost in export.
+
+It never invents experience, metrics, or company facts, and it never submits an
+application or sends a message for you. It makes your relevant experience easy to
+evaluate; it cannot guarantee an interview.
 
 ## Install
 
-Requirements: Python 3.9+. PDF export needs Chrome, Chromium, Edge, or Brave; DOCX export works without a browser. Optional: `pip install pypdf` enables PDF content and link checks, and `pip install pypdfium2 pillow` (or poppler's `pdftoppm`) enables PDF page previews.
+You need Python 3.9 or later. PDF export also needs Chrome, Chromium, Edge, or Brave;
+DOCX export works without a browser. Two optional extras turn on more checks:
+`pip install pypdf` checks the text and links inside the PDF, and
+`pip install pypdfium2 pillow` (or poppler's `pdftoppm`) renders the PDF pages so they
+can be reviewed.
 
 **Claude Code** (plugin marketplace):
 
@@ -19,32 +35,46 @@ Requirements: Python 3.9+. PDF export needs Chrome, Chromium, Edge, or Brave; DO
 /plugin install generate-custom-resume@riyasaat-skills
 ```
 
-On Claude Code 2.1.275 or later this is one step: `/plugin install generate-custom-resume --marketplace RiyasaatAhmed/generate-custom-resume`. Plugin skills are namespaced, so run `/generate-custom-resume:generate-custom-resume <job post>`, or just ask Claude to tailor your resume for a job.
+On Claude Code 2.1.275 or later you can do it in one step:
+`/plugin install generate-custom-resume --marketplace RiyasaatAhmed/generate-custom-resume`.
+Claude Code prefixes plugin skills with the plugin name, so the command is
+`/generate-custom-resume:generate-custom-resume <job post>`. Asking Claude to tailor your
+resume for a job also works.
 
-**Cursor**: install from the Cursor plugin marketplace, or go to *Customize → From GitHub Repository* and paste `https://github.com/RiyasaatAhmed/generate-custom-resume`.
+**Cursor**: install from the Cursor plugin marketplace, or open *Customize → From GitHub
+Repository* and paste `https://github.com/RiyasaatAhmed/generate-custom-resume`.
 
-**Antigravity, Codex, Gemini CLI, Copilot, OpenCode, and other agents** (via the [skills CLI](https://github.com/vercel-labs/skills)):
+**Antigravity, Codex, Gemini CLI, Copilot, OpenCode, and other agents**, using the
+[skills CLI](https://github.com/vercel-labs/skills):
 
 ```bash
 npx skills add RiyasaatAhmed/generate-custom-resume -g
 ```
 
-`-g` installs for your user rather than one project; the CLI asks which agents to install for.
+`-g` installs the skill for your user account instead of a single project. The CLI asks
+which agents to install it for.
 
-**From a clone** (for development, or to pin a local copy):
+**From a clone**, for development or to keep a local copy:
 
 ```bash
 git clone https://github.com/RiyasaatAhmed/generate-custom-resume
 cd generate-custom-resume && ./install.sh
 ```
 
-`install.sh` symlinks the skill into `~/.claude/skills` (Claude Code) and `~/.agents/skills` (read by Cursor, Antigravity, Codex, Gemini CLI, and others). Use `--target claude` or `--target agents` to link only one, `--smoke` to test PDF export, and `--uninstall` to remove the links. It never replaces a skill installed by something else.
+`install.sh` symlinks the skill into `~/.claude/skills` for Claude Code and into
+`~/.agents/skills`, which Cursor, Antigravity, Codex, Gemini CLI, and others read. Pass
+`--target claude` or `--target agents` to link only one, `--smoke` to test PDF export,
+or `--uninstall` to remove the links. It never replaces a skill that something else
+installed.
 
-To install by hand, copy `skills/generate-custom-resume/` into your agent's skills folder. The skill is self-contained: its scripts, references, and templates live inside that folder.
+To install by hand, copy `skills/generate-custom-resume/` into your agent's skills
+folder. The folder is self-contained: its scripts, references, and templates all live
+inside it.
 
 ## Your data
 
-Your profile and applications live in a data folder outside the installed skill, so updates never touch them:
+Your profile and applications live in a data folder outside the installed skill, so
+updating the skill never touches them:
 
 ```text
 ~/resume-kit/            or $RESUME_KIT_HOME
@@ -56,9 +86,14 @@ Your profile and applications live in a data folder outside the installed skill,
 └── applications/        one folder per job
 ```
 
-On first run the agent calls `scripts/init_kit.py`, which creates this folder with fictional starter files (Jane Doe) and never overwrites existing files. Replace the examples with your own details before generating a real application; the agent refuses to treat the examples as your experience. To use a different folder, set `RESUME_KIT_HOME=/path/to/folder` in your shell profile.
+On the first run the agent calls `scripts/init_kit.py`. It creates this folder with
+fictional starter files for "Jane Doe" and never overwrites a file that already exists.
+Replace the examples with your own details before you generate a real application; the
+agent will not treat the examples as your experience. To keep your data somewhere else,
+set `RESUME_KIT_HOME=/path/to/folder` in your shell profile.
 
-Keeping files local does not mean local-only processing: what your agent sends to its model provider depends on the agent and its settings.
+Local files do not mean local-only processing. What your agent sends to its model
+provider depends on the agent and its settings.
 
 ## What each application contains
 
@@ -87,11 +122,15 @@ applications/<company-role-date-id>/
 | Export/QA | Preserve content and links, check page count, inspect actual PDF pages |
 | Records | Keep drafting, contacting, and submitting distinct |
 
-Candidate notes govern style and access (for example, "never access LinkedIn"); they cannot make an unsupported claim true. Time-zone overlap does not establish work authorization or residence.
+Your candidate notes control style and access. For example, a "never access LinkedIn"
+rule tells the agent to stay off LinkedIn even when looking up a contact; it is an
+instruction to the agent, not a technical block. Notes cannot make an unsupported claim
+true. Overlapping with an employer's time zone does not establish where you live or
+whether you can legally work there.
 
 ## Resume source format
 
-The exporter supports a deliberate Markdown dialect, not arbitrary Markdown:
+The exporter accepts a specific Markdown dialect, not arbitrary Markdown:
 
 ```markdown
 # Your Name
@@ -130,9 +169,16 @@ Issuer
 Relevant detail.
 ```
 
-Sections are optional; `Work Experience` is also accepted. Unknown sections, malformed entries, tables, and code blocks fail explicitly. Each bullet is one source line. HTML comments are left out of exports, so the master resume can hold a bullet bank the agent selects from. There is no forced page count, bullet count, or number in every bullet.
+Every section is optional, and `Work Experience` works in place of `Experience`. An
+unknown section, a malformed entry, a table, or a code block fails with an error rather
+than disappearing from the export. Write each bullet on one source line. HTML comments
+never reach the export, so your master resume can keep a bullet bank in comments for the
+agent to choose from. Nothing forces a page count, a bullet count, or a number in every
+bullet.
 
-Contacts come from `profile.json`. Bare `[View Project]` tokens resolve through `company_projects` and move to the company row; other bare tokens resolve through `link_labels`. Unresolved tokens fail export.
+Contact details come from `profile.json`. A bare `[View Project]` token resolves through
+`company_projects` and moves to the company row; other bare tokens resolve through
+`link_labels`. A token with no matching link fails the export.
 
 ## Profile settings
 
@@ -150,11 +196,14 @@ Contacts come from `profile.json`. Bare `[View Project]` tokens resolve through 
 | `bold_terms`, `summary_bold_phrases` | Extra auto-bold terms and summary regexes |
 | `resume_max_pages` | Default QA page budget, overridden by `--max-pages` |
 
-Environment variables: `RESUME_KIT_HOME` (data folder), `RESUME_PROFILE` (a different profile.json), `CHROME_PATH` (a specific Chromium-based browser).
+Environment variables: `RESUME_KIT_HOME` sets the data folder, `RESUME_PROFILE` points to
+a different `profile.json`, and `CHROME_PATH` picks a specific Chromium-based browser.
 
 ## Running the scripts yourself
 
-The agent runs these for you. Paths below assume a clone; `S=skills/generate-custom-resume/scripts` and `A=~/resume-kit/applications/<id>`.
+The agent runs these for you. The commands assume a clone, with two shell variables:
+`S=skills/generate-custom-resume/scripts` for the scripts and
+`A=~/resume-kit/applications/<id>` for one application folder.
 
 ```bash
 python3 $S/init_kit.py                                  # create/check the data folder
@@ -169,9 +218,17 @@ python3 $S/applications.py submit $A upload/Jane-Doe-Resume.pdf --confirm-submit
 python3 $S/applications.py summary --group-by role_family
 ```
 
-QA compares the source with DOCX text and links, PDF text and link destinations, and the page budget. Results are pass, fail, or skipped per check; `--require-complete` makes skipped checks exit 2. Rendering pages is not visual inspection: `--visual-reviewed "notes"` is for after someone actually looked at every page. These checks do not certify any particular ATS.
+QA compares the source with the DOCX text and links, the PDF text and link destinations,
+and the page budget, and reports each check as pass, fail, or skipped. With
+`--require-complete`, a skipped check exits with code 2. Rendering the pages is not the
+same as reviewing them: use `--visual-reviewed "notes"` only after someone has looked at
+every page. None of these checks certifies how a particular ATS will read the resume.
 
-`outreach.py check` flags unresolved placeholders, missing subjects, overlong messages, and "I have applied" wording without a confirmed submission. `applications.py submit` records something you already did; it never submits. Outcome rates count only submitted applications, and small samples do not prove causation.
+`outreach.py check` catches unresolved placeholders, missing subject lines, messages over
+the length budget, and "I have applied" wording before a submission is confirmed.
+`applications.py submit` records a submission you already made; it never submits
+anything. Outcome rates count only submitted applications, and a handful of applications
+cannot show what caused a result.
 
 ## Development
 
@@ -181,7 +238,8 @@ python3 skills/generate-custom-resume/scripts/smoke.py   # exports fictional fix
 claude plugin validate . --strict
 ```
 
-Tests use temporary folders and fictional profiles; they never touch a real profile, HOME, or send anything.
+The tests use temporary folders and fictional profiles. They never touch a real profile
+or your home folder, and they never send anything.
 
 ```text
 .claude-plugin/          Claude Code plugin + marketplace manifests
@@ -195,13 +253,18 @@ install.sh               link a clone into local agents
 tests/
 ```
 
-DOCX styling comes from `assets/resume-template.docx`. A custom template must keep the 17 prototype paragraphs in the order documented by `PROTO` in `scripts/md_to_docx.py`. PDF styling is in `scripts/md_to_pdf.py`.
+DOCX styling comes from `assets/resume-template.docx`. A custom template must keep the
+17 prototype paragraphs in the order listed in `PROTO` in `scripts/md_to_docx.py`. PDF
+styling lives in `scripts/md_to_pdf.py`.
 
-When releasing, bump `version` in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.cursor-plugin/plugin.json`, and `metadata.version` in `SKILL.md`.
+For a release, bump the version in four places: `.claude-plugin/plugin.json`,
+`.claude-plugin/marketplace.json`, `.cursor-plugin/plugin.json`, and `metadata.version` in
+`SKILL.md`.
 
 ## Research basis and limits
 
-The writing and formatting defaults draw on these sources. Each supports a narrow point, not a universal rule:
+The writing and formatting defaults draw on these sources. Each supports one narrow
+point, not a universal rule:
 
 - [CareerOneStop formatting](https://cloudfront.careeronestop.org/JobSearch/Resumes/ResumeGuide/formatting.aspx): readable layouts and one or two pages based on experience.
 - [Harvard resume/letter guidance](https://careerservices.fas.harvard.edu/resources/create-a-strong-resume/): specific, factual, tailored writing and relevant examples.
@@ -211,7 +274,7 @@ The writing and formatting defaults draw on these sources. Each supports a narro
 - [OPM work samples](https://www.opm.gov/policy-data-oversight/assessment-and-selection/other-assessment-methods/work-samples-and-simulations/): job-relevant demonstrations assess competencies; unsolicited portfolio benefits remain an inference.
 - [NBER writing-assistance study](https://www.nber.org/papers/w30886): an 8% relative hiring increase in one online-labor-market experiment, not a guarantee for this kit.
 
-No actual ATS upload or application-conversion history was used to validate this kit.
+The kit has not been validated against real ATS uploads or real application outcomes.
 
 ## License
 
