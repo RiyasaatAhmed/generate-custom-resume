@@ -1,6 +1,11 @@
 ---
 name: generate-custom-resume
-description: Tailor a truthful resume, cover letter, and optional outreach to a job posting; assess fit, research the employer, export and validate documents, and maintain local application records. Also use to revise an existing application or prepare evidence-based interview stories. Does not submit applications or send messages.
+description: Tailor a truthful resume, cover letter, and optional outreach to a job posting; assess fit, research the employer, export and validate documents, and maintain local application records. Also use for letter-only requests, to revise an existing application, or to prepare evidence-based interview stories. Does not submit applications or send messages.
+license: MIT
+compatibility: Requires Python 3.9+ and a shell. PDF export needs Chrome, Chromium, Edge, or Brave; pypdf and pypdfium2 + Pillow enable optional PDF checks.
+metadata:
+  author: Riyasaat Ahmed Rahul
+  version: "1.0.0"
 ---
 
 # Generate a custom application
@@ -9,14 +14,26 @@ Help the candidate make a specific, defensible case for an appropriate role. Nev
 promise acceptance, invent qualifications, or present a local match score as an
 employer's ATS score.
 
+The input is a job post URL, pasted posting text, or an existing application folder.
+If none was supplied, ask for it once. Run the applicable local helpers yourself; do
+not merely describe commands for the user to run.
+
 ## Locate inputs and respect scope
 
-The slash command supplies the absolute kit root. Otherwise resolve this SKILL.md
-(following symlinks): its grandparent's parent is the kit root containing `scripts/`,
-`profile/`, and `applications/`. Resolve all paths against that root, not the caller's
-working directory. In reference commands, replace `<KIT>` and `<APP>` with absolute paths.
+Two locations matter, and neither is the caller's working directory:
 
-Read `profile/candidate-notes.md`, `profile/profile.json`, and the selected base resume.
+- `<SKILL_DIR>`: the folder containing this SKILL.md (resolve symlinks). It holds
+  `scripts/`, `references/`, and `assets/`. It may be replaced on update; never store
+  candidate data there.
+- `<DATA>`: the candidate's data folder, `$RESUME_KIT_HOME` or `~/resume-kit`. It holds
+  `profile/` and `applications/`.
+
+Start every run with `python3 "<SKILL_DIR>/scripts/init_kit.py"`. It creates missing
+starter files without overwriting anything, then prints `<DATA>` and which export
+checks are available. In reference commands, replace `<SKILL_DIR>`, `<DATA>`, and
+`<APP>` with absolute paths.
+
+Read `<DATA>/profile/candidate-notes.md`, `profile.json`, and the selected base resume.
 Use a role-specific base variant only when its core experience matches; explain the choice.
 If the profile is missing or still the fictional example, request the candidate's data.
 Never treat the examples as the user's experience. Read bullet-bank comments as source
@@ -60,8 +77,8 @@ search/fetch tools; if blocked, ask for the posting text. Do not guess the missi
    what changed, and QA limitations. On later user-confirmed events, update the record.
 
 For a narrow edit, run only the relevant steps and revalidate changed outputs. Preserve
-submitted snapshots. Full interview prep remains optional. Never commit or send unless
-the user separately asks for that action.
+submitted snapshots. Full interview prep remains optional. Drafting is not submission.
+Never send, submit, publish, or commit unless the user separately asks for that action.
 
 ## Core quality contract
 
@@ -82,7 +99,8 @@ the user separately asks for that action.
 
 ## Files
 
-Use `scripts/applications.py init` to obtain a unique folder, or reuse the explicit existing
+Use `<SKILL_DIR>/scripts/applications.py init` to obtain a unique folder under
+`<DATA>/applications/`, or reuse the explicit existing
 application folder for revisions. Save `job-post.md`, `application.json`, `research.md`,
 `evidence-map.json`, resume sources/exports, `qa.json`, and requested letter/outreach files.
 Use `outreach/` for channel drafts and `submitted/` only through confirmed snapshot recording.

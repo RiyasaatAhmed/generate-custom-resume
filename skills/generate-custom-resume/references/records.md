@@ -3,7 +3,7 @@
 Create a unique application directory, or reuse the explicitly selected record for edits:
 
 ```bash
-python3 "<KIT>/scripts/applications.py" init --company "Example Co" --role "Frontend Engineer" --url "https://example.com/job" --requisition "REQ-123" --role-family "frontend" --geography "remote-eu" --channel "direct"
+python3 "<SKILL_DIR>/scripts/applications.py" init --company "Example Co" --role "Frontend Engineer" --url "https://example.com/job" --requisition "REQ-123" --role-family "frontend" --geography "remote-eu" --channel "direct"
 ```
 
 The printed path is `<APP>`. Initialization records `drafted`, not `applied`. Save the
@@ -14,13 +14,13 @@ avoid overwriting different openings with the same company/title.
 After preparing and reviewing the documents, record readiness:
 
 ```bash
-python3 "<KIT>/scripts/applications.py" event "<APP>" ready --note "Reviewed evidence and QA; selected upload files prepared"
+python3 "<SKILL_DIR>/scripts/applications.py" event "<APP>" ready --note "Reviewed evidence and QA; selected upload files prepared"
 ```
 
 Only after the user says they actually submitted, record the exact files submitted:
 
 ```bash
-python3 "<KIT>/scripts/applications.py" submit "<APP>" "upload/Jane-Doe-Resume.pdf" --confirm-submitted --note "User confirmed submission"
+python3 "<SKILL_DIR>/scripts/applications.py" submit "<APP>" "upload/Jane-Doe-Resume.pdf" --confirm-submitted --note "User confirmed submission"
 ```
 
 Replace the example filename with the actual upload filename. This command records
@@ -37,8 +37,8 @@ or an interview occurred merely because the next stage seems likely. Put relevan
 in the note. Closed applications remain closed; initialize a new record for a new process.
 
 ```bash
-python3 "<KIT>/scripts/applications.py" summary "<KIT>/applications"
-python3 "<KIT>/scripts/applications.py" summary "<KIT>/applications" --group-by role_family
+python3 "<SKILL_DIR>/scripts/applications.py" summary
+python3 "<SKILL_DIR>/scripts/applications.py" summary --group-by role_family
 ```
 
 Summaries distinguish prepared and submitted counts. Rates use submitted records and

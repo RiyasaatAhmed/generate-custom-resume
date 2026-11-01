@@ -34,8 +34,8 @@ accepted by the exporter. Do not leave placeholders in a submission-ready letter
 By default deliver paste-ready text. If a letter attachment is requested:
 
 ```bash
-python3 "<KIT>/scripts/md_export.py" "<APP>/cover-letter.md" --cover
-python3 "<KIT>/scripts/qa.py" "<APP>/cover-letter.md" --cover --max-pages 1 --json "<APP>/cover-letter-qa.json"
+python3 "<SKILL_DIR>/scripts/md_export.py" "<APP>/cover-letter.md" --cover
+python3 "<SKILL_DIR>/scripts/qa.py" "<APP>/cover-letter.md" --cover --max-pages 1 --json "<APP>/cover-letter-qa.json"
 ```
 
 The source-based checks validate retained text/links, not the credibility of its argument.

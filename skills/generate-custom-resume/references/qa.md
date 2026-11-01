@@ -3,8 +3,8 @@
 Run exports from the selected profile. `RESUME_PROFILE` can select a different profile.
 
 ```bash
-python3 "<KIT>/scripts/md_export.py" "<APP>/resume.md"
-python3 "<KIT>/scripts/qa.py" "<APP>/resume.md" --max-pages 2
+python3 "<SKILL_DIR>/scripts/md_export.py" "<APP>/resume.md"
+python3 "<SKILL_DIR>/scripts/qa.py" "<APP>/resume.md" --max-pages 2
 ```
 
 Choose a page budget consistent with the candidate, market, and posting. `--docx-only`
@@ -29,7 +29,7 @@ Fix meaningful problems, re-export, and recheck. Rendering is not visual inspect
 After actually inspecting the current PDF, record observations:
 
 ```bash
-python3 "<KIT>/scripts/qa.py" "<APP>/resume.md" --max-pages 2 --visual-reviewed "Reviewer: inspected all pages; no clipping or stranded headings"
+python3 "<SKILL_DIR>/scripts/qa.py" "<APP>/resume.md" --max-pages 2 --visual-reviewed "Reviewer: inspected all pages; no clipping or stranded headings"
 ```
 
 The report binds the review to the current PDF hash. Never supply that flag without

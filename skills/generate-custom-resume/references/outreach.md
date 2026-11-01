@@ -32,7 +32,7 @@ above the `// ---` separator; comments beginning `//` may label the recommended 
 For messages without a subject, save just the body. Replace placeholders before sending.
 
 ```bash
-python3 "<KIT>/scripts/outreach.py" check "<APP>/outreach/hiring-manager.txt" --channel hiring-manager --application "<APP>/application.json"
+python3 "<SKILL_DIR>/scripts/outreach.py" check "<APP>/outreach/hiring-manager.txt" --channel hiring-manager --application "<APP>/application.json"
 ```
 
 Use `--draft` only for unfinished drafts. `--limit N` overrides the editorial message
