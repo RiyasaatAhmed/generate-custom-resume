@@ -12,7 +12,7 @@
       "name": "generate-custom-resume",
       "source": "./",
       "description": "Tailor a truthful resume, cover letter, and recruiter outreach to a job post: fit assessment, evidence map, DOCX/PDF export with QA, and local application records. Never invents claims or submits for you.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "productivity",
       "keywords": [
         "resume",

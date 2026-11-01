@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires Python 3.9+ and a shell. PDF export needs Chrome, Chromium, Edge, or Brave; pypdf and pypdfium2 + Pillow enable optional PDF checks.
 metadata:
   author: Riyasaat Ahmed Rahul
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Generate a custom application
