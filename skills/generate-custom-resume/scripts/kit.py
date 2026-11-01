@@ -12,9 +12,23 @@ from functools import lru_cache
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-KIT_ROOT = SCRIPT_DIR.parent
-DEFAULT_TEMPLATE = KIT_ROOT / "templates" / "resume-template.docx"
-PROFILE_DIR = KIT_ROOT / "profile"
+SKILL_DIR = SCRIPT_DIR.parent
+ASSETS_DIR = SKILL_DIR / "assets"
+EXAMPLE_PROFILE_DIR = ASSETS_DIR / "profile"
+DEFAULT_TEMPLATE = ASSETS_DIR / "resume-template.docx"
+
+
+def data_home() -> Path:
+    """User data lives outside the installed skill, which agents replace on update."""
+    return Path(os.environ.get("RESUME_KIT_HOME") or Path.home() / "resume-kit").expanduser()
+
+
+def profile_dir() -> Path:
+    return data_home() / "profile"
+
+
+def applications_dir() -> Path:
+    return data_home() / "applications"
 
 CHROME_CANDIDATES = [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -38,19 +52,19 @@ def load_module(name: str, filename: str):
 
 
 def profile_path() -> Path:
-    """`RESUME_PROFILE` env var wins, then profile/profile.json, then the bundled example."""
+    """`RESUME_PROFILE` env var wins, then <data home>/profile/profile.json, then the bundled example."""
     env = os.environ.get("RESUME_PROFILE")
     if env:
         return Path(env).expanduser()
-    real = PROFILE_DIR / "profile.json"
-    return real if real.exists() else PROFILE_DIR / "profile.example.json"
+    real = profile_dir() / "profile.json"
+    return real if real.exists() else EXAMPLE_PROFILE_DIR / "profile.example.json"
 
 
 @lru_cache(maxsize=1)
 def load_profile() -> dict:
     path = profile_path()
     if not path.exists():
-        raise FileNotFoundError(f"Profile not found: {path}. Run ./setup.sh first.")
+        raise FileNotFoundError(f"Profile not found: {path}. Run scripts/init_kit.py first.")
     data = json.loads(path.read_text(encoding="utf-8"))
     data.setdefault("contact_lines", [])
     data.setdefault("link_labels", {})

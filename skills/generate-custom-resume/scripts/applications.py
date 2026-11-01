@@ -13,6 +13,9 @@ import os
 from pathlib import Path
 import re
 import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import kit  # noqa: E402
 import tempfile
 import uuid
 
@@ -174,7 +177,8 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     init = sub.add_parser("init")
-    init.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1] / "applications")
+    init.add_argument("--root", type=Path, default=None,
+                      help="Applications folder (default: <RESUME_KIT_HOME or ~/resume-kit>/applications)")
     for name in ("company", "role"):
         init.add_argument("--" + name, required=True)
     for name in ("url", "requisition"):
@@ -193,12 +197,12 @@ def main(argv=None) -> int:
     verify = sub.add_parser("verify")
     verify.add_argument("directory", type=Path)
     summary = sub.add_parser("summary")
-    summary.add_argument("root", type=Path)
+    summary.add_argument("root", type=Path, nargs="?", help="Applications folder (default: data home)")
     summary.add_argument("--group-by", choices=("role_family", "geography", "channel"))
     args = parser.parse_args(argv)
     try:
         if args.command == "init":
-            print(initialize(args.root, args.company, args.role, args.url, args.requisition, args.role_family, args.geography, args.channel))
+            print(initialize(args.root or kit.applications_dir(), args.company, args.role, args.url, args.requisition, args.role_family, args.geography, args.channel))
         elif args.command == "event":
             print(json.dumps(event(args.directory, args.state, args.note), indent=2))
         elif args.command == "submit":
@@ -208,7 +212,7 @@ def main(argv=None) -> int:
             print(json.dumps({"problems": problems}, indent=2))
             return 1 if problems else 0
         else:
-            report = summarize(args.root, args.group_by)
+            report = summarize(args.root or kit.applications_dir(), args.group_by)
             print(json.dumps(report, indent=2))
             return 1 if report["errors"] else 0
     except (OSError, ValueError, KeyError, TypeError) as exc:

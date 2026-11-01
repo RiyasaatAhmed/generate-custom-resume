@@ -20,9 +20,9 @@ def main(argv=None) -> int:
     root.mkdir(parents=True, exist_ok=True)
     if any(root.iterdir()):
         parser.error("--output must be empty; smoke tests never overwrite existing files")
-    os.environ["RESUME_PROFILE"] = str(kit.KIT_ROOT / "profile/profile.example.json")
+    os.environ["RESUME_PROFILE"] = str(kit.EXAMPLE_PROFILE_DIR / "profile.example.json")
     kit.load_profile.cache_clear()
-    base = (kit.KIT_ROOT / "profile/base-resume.example.md").read_text(encoding="utf-8")
+    base = (kit.EXAMPLE_PROFILE_DIR / "base-resume.example.md").read_text(encoding="utf-8")
     extended = base + "\n## Projects\n### Accessible scheduling demo\n"
     extended += "\n".join(f"- Scenario {i}: built a keyboard-accessible appointment flow with clear validation and recovery states for testing." for i in range(1, 19))
     extended += "\n\n## Certifications\n**Example Credential** | 2024\nFictional testing credential.\n\n## Publications\n[Accessibility example](https://example.org/paper)\n"

@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from unittest.mock import patch
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1] / "skills/generate-custom-resume"
 sys.path.insert(0, str(ROOT / "scripts"))
 import kit
 import md_to_cover
@@ -23,7 +23,7 @@ import document_checks
 
 class DocumentTests(unittest.TestCase):
     def setUp(self):
-        self.env = patch.dict(os.environ, {"RESUME_PROFILE": str(ROOT / "profile/profile.example.json")})
+        self.env = patch.dict(os.environ, {"RESUME_PROFILE": str(ROOT / "assets/profile/profile.example.json")})
         self.env.start()
         kit.load_profile.cache_clear()
         self.tmp = tempfile.TemporaryDirectory()
@@ -59,7 +59,7 @@ class DocumentTests(unittest.TestCase):
                 self.assertFalse(source.with_suffix(".docx").exists())
 
     def test_extended_sections_survive_both_renderers(self):
-        base = (ROOT / "profile/base-resume.example.md").read_text()
+        base = (ROOT / "assets/profile/base-resume.example.md").read_text()
         base = base.replace("University of Lisbon, Lisbon, Portugal", "University of Lisbon, Lisbon, Portugal\n\n**M.S. Computing** | 2020 - 2022\nExample University")
         source = self.path / "resume.md"
         source.write_text(base + "\n## Projects\n### Scheduling Tool\n- Built accessible calendars.\n\n## Certifications\n**Example Credential** | 2024\n\n## Publications\n[Sample Paper](https://example.org/paper)\n")
@@ -74,7 +74,7 @@ class DocumentTests(unittest.TestCase):
         self.assertEqual(qa.parse_qa(source, source.with_suffix(".docx")), [])
 
     def test_bad_resume_structure_fails(self):
-        base = (ROOT / "profile/base-resume.example.md").read_text()
+        base = (ROOT / "assets/profile/base-resume.example.md").read_text()
         for text in [base + "\n## Unexpected\nImportant evidence", base.replace("## Experience", "## Employment"),
                      base.replace("### Senior Frontend Engineer", "Senior Frontend Engineer"),
                      base.replace("**Northwind Health**, Berlin, Germany (Remote) | Mar 2023 - Present", "Northwind"),
@@ -83,14 +83,14 @@ class DocumentTests(unittest.TestCase):
                 resume_model.parse(text)
 
     def test_example_and_unicode_resume_parse(self):
-        base = (ROOT / "profile/base-resume.example.md").read_text().replace("Jane Doe", "Zoë García 李")
+        base = (ROOT / "assets/profile/base-resume.example.md").read_text().replace("Jane Doe", "Zoë García 李")
         parsed = md_to_docx.parse_md(base)
         self.assertEqual(parsed["name"], "Zoë García 李")
         self.assertEqual(len(parsed["roles"]), 3)
         self.assertEqual(len(parsed["roles"][0]["bullets"]), 4)
 
     def test_unicode_resume_survives_docx_export_and_qa(self):
-        base = (ROOT / "profile/base-resume.example.md").read_text()
+        base = (ROOT / "assets/profile/base-resume.example.md").read_text()
         base = base.replace("Jane Doe", "Zoë García 李").replace(
             "## Experience", "## Experience\n### Ingeniera de Interfaz — Café Systems\n"
             "**Café Systems**, São Paulo, Brazil | Jan 2014 – Dec 2014\n"
@@ -104,7 +104,7 @@ class DocumentTests(unittest.TestCase):
         self.assertEqual(qa.parse_qa(source, source.with_suffix(".docx")), [])
 
     def test_long_content_is_retained(self):
-        base = (ROOT / "profile/base-resume.example.md").read_text()
+        base = (ROOT / "assets/profile/base-resume.example.md").read_text()
         bullets = "\n".join(f"- Delivered fictional scenario {i} covering validation, recovery states, keyboard access, "
                             f"and screen-reader announcements across the appointment flow, measured in test {i}."
                             for i in range(1, 31))
@@ -116,7 +116,7 @@ class DocumentTests(unittest.TestCase):
         self.assertEqual(qa.parse_qa(source, source.with_suffix(".docx")), [])
 
     def test_more_malformed_resumes_fail(self):
-        base = (ROOT / "profile/base-resume.example.md").read_text()
+        base = (ROOT / "assets/profile/base-resume.example.md").read_text()
         cases = {
             "unclosed comment": base + "\n<!-- forgotten",
             "table": base + "\n## Projects\n| a | b |",
@@ -132,7 +132,7 @@ class DocumentTests(unittest.TestCase):
 
     def test_unresolved_link_token_fails_export(self):
         source = self.path / "resume.md"
-        source.write_text((ROOT / "profile/base-resume.example.md").read_text().replace(
+        source.write_text((ROOT / "assets/profile/base-resume.example.md").read_text().replace(
             "## Education", "## Publications\n[Unknown Label]\n\n## Education", 1))
         result = subprocess.run([sys.executable, str(ROOT / "scripts/md_export.py"), str(source), "--docx-only"],
                                 capture_output=True, text=True)
@@ -142,7 +142,7 @@ class DocumentTests(unittest.TestCase):
 
     def make_resume(self):
         source = self.path / "resume.md"
-        source.write_text((ROOT / "profile/base-resume.example.md").read_text())
+        source.write_text((ROOT / "assets/profile/base-resume.example.md").read_text())
         md_to_docx.convert(kit.DEFAULT_TEMPLATE, source, source.with_suffix(".docx"))
         return source
 

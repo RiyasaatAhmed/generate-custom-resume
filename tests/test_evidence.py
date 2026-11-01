@@ -4,15 +4,15 @@ from pathlib import Path
 import sys
 import unittest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1] / "skills/generate-custom-resume"
 sys.path.insert(0, str(ROOT / "scripts"))
 import evidence
 
 
 class EvidenceTests(unittest.TestCase):
     def setUp(self):
-        self.bank = json.loads((ROOT / "profile/achievements.example.json").read_text())
-        self.mapping = json.loads((ROOT / "templates/evidence-map.example.json").read_text())
+        self.bank = json.loads((ROOT / "assets/profile/achievements.example.json").read_text())
+        self.mapping = json.loads((ROOT / "assets/evidence-map.example.json").read_text())
 
     def test_examples(self):
         self.assertEqual(evidence.bank_errors(self.bank), [])
