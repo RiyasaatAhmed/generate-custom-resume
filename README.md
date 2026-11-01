@@ -259,7 +259,7 @@ styling lives in `scripts/md_to_pdf.py`.
 
 For a release, bump the version in four places: `.claude-plugin/plugin.json`,
 `.claude-plugin/marketplace.json`, `.cursor-plugin/plugin.json`, and `metadata.version` in
-`SKILL.md`.
+`SKILL.md`. `tests/test_manifests.py` fails if they disagree.
 
 ## Research basis and limits
 
