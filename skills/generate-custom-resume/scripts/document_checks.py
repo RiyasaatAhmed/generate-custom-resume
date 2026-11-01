@@ -31,6 +31,7 @@ def source_inventory(path: Path, cover: bool = False) -> tuple[list[str], set[tu
     raw = resume_model.clean_source(path.read_text(encoding="utf-8"))
     fragments: list[str] = []
     targets: set[tuple[str, str]] = set()
+    contact_rows: set[str] = set()
     profile = kit.load_profile()
     for item in kit.contact_items():
         fragments.append(item["text"])
@@ -42,7 +43,9 @@ def source_inventory(path: Path, cover: bool = False) -> tuple[list[str], set[tu
         fragments.extend([data["name"], data["headline"]])
         lines = [line for block in data["blocks"] for line in block]
     else:
-        resume_model.parse(raw)
+        # Profile contacts replace exactly the rows the parser classed as contacts; every
+        # other header line, including a location written with | separators, must survive.
+        contact_rows = set(resume_model.parse(raw)["contacts"])
         lines = raw.splitlines()
     in_header = not cover
     company = ""
@@ -54,7 +57,7 @@ def source_inventory(path: Path, cover: bool = False) -> tuple[list[str], set[tu
             in_header = False
             company = ""
             continue
-        if in_header and not line.startswith(("# ", "**")) and any(c in line for c in ("|", "@", "http")) and profile["contact_lines"]:
+        if in_header and not cover and line in contact_rows and profile["contact_lines"]:
             continue
         if line.startswith("### "):
             company = ""

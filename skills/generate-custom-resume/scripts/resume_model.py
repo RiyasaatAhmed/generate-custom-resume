@@ -27,6 +27,15 @@ def plain(text: str) -> str:
     return re.sub(r"\*\*(.+?)\*\*", r"\1", text).strip()
 
 
+# An email, URL, Markdown link, or bare domain marks a header row as contact details.
+# ".js" is excluded so a technology like Next.js is not read as a website.
+CONTACT_HINT = re.compile(r"@|https?://|\]\(|\b[\w-]+\.(?!js\b)[a-z]{2,}\b", re.I)
+
+
+def is_contact_row(line: str) -> bool:
+    return bool(CONTACT_HINT.search(line))
+
+
 def parse(text: str) -> dict:
     lines = clean_source(text).splitlines()
     if not lines or not re.fullmatch(r"#\s+\S.*", lines[0]):
@@ -53,10 +62,12 @@ def parse(text: str) -> dict:
         elif current is None:
             if re.fullmatch(r"\*\*.+\*\*", line) and not data["headline"]:
                 data["headline"] = plain(line)
-            elif "|" in line or "@" in line or "http" in line:
+            elif is_contact_row(line):
                 data["contacts"].append(line)
             elif not data["relocation"] and not line.startswith("#"):
-                data["relocation"] = line
+                data["relocation"] = line  # may use | separators: "Lisbon | EU hours"
+            elif "|" in line:
+                data["contacts"].append(line)  # label-only row after the location: "LinkedIn | GitHub"
             else:
                 raise ValueError(f"Line {number}: unrecognized header content {line!r}")
         else:

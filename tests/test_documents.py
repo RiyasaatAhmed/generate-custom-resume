@@ -187,6 +187,34 @@ class DocumentTests(unittest.TestCase):
         self.assertEqual(document_checks.missing_content(["workflow 35%"], "workﬂow 35%"), [])
         self.assertTrue(document_checks.missing_content(["35%"], "53%"))
 
+    def test_location_line_with_pipes_is_not_mistaken_for_contacts(self):
+        base = (ROOT / "assets/profile/base-resume.example.md").read_text()
+        location = "Lisbon, Portugal | EU citizen | Remote, EU hours"
+        source = self.path / "resume.md"
+        source.write_text(base.replace("Remote (EU / US East overlap)", location), encoding="utf-8")
+        parsed = resume_model.parse(source.read_text())
+        self.assertEqual(parsed["relocation"], location)
+        self.assertEqual(len(parsed["contacts"]), 1)  # the email/website row
+        fragments, _ = document_checks.source_inventory(source)
+        self.assertIn("Lisbon, Portugal", fragments)  # the check now expects it in exports
+        md_to_docx.convert(kit.DEFAULT_TEMPLATE, source, source.with_suffix(".docx"))
+        self.assertIn(location, qa.docx_text(source.with_suffix(".docx")))
+        self.assertEqual(qa.parse_qa(source, source.with_suffix(".docx")), [])
+
+    def test_header_rows_are_classified_by_content(self):
+        header = "# Sam Rivera\n**Engineer**\n{rows}\n\n## Summary\nText.\n"
+        cases = {
+            "Lisbon, Portugal\nsam@example.com | LinkedIn | GitHub": ("Lisbon, Portugal", 1),
+            "Remote | EU hours\nsamrivera.dev | LinkedIn": ("Remote | EU hours", 1),
+            "Berlin, Germany\n[Portfolio](https://example.com) | GitHub\nLinkedIn | Stack Overflow": ("Berlin, Germany", 2),
+            "sam@example.com | samrivera.dev": ("", 1),
+        }
+        for rows, (relocation, contact_count) in cases.items():
+            with self.subTest(rows=rows):
+                parsed = resume_model.parse(header.format(rows=rows))
+                self.assertEqual(parsed["relocation"], relocation)
+                self.assertEqual(len(parsed["contacts"]), contact_count)
+
     def test_pdf_spacing_inside_words_is_not_missing_content(self):
         # pypdf extracts some bold digits with a stray space ("9 2%") although the page shows "92%".
         expected = ["design system covering 92% of screens."]
