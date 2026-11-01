@@ -1,103 +1,165 @@
 #!/usr/bin/env python3
-"""Post-export QA for a tailored resume.
-
-1. Parse QA: name, every contact, every job title and every date range survive in the .docx text.
-2. Page check: page count, and where page 1 ends / page 2 starts (needs `pip install pypdf`).
-3. Wrap check: screenshots the .html at A4 print width so wrapped bullets and skills lines are visible.
-
-Usage: python3 scripts/qa.py applications/<slug>/resume.md
-"""
+"""Validate content, links, page budget and PDF previews; write explicit QA results."""
 from __future__ import annotations
-
 import argparse
+import hashlib
+import json
 import re
+import shutil
+import subprocess
 import sys
-import xml.etree.ElementTree as ET
-import zipfile
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import kit  # noqa: E402
+import kit
+from document_checks import check_docx, docx_text, missing_content, source_inventory
 
 NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
-PRINT_WIDTH_PX = 680  # A4 width minus the PDF margins, at 96 dpi
+PRINT_WIDTH_PX = 680
 
 
-def docx_text(path: Path) -> str:
-    with zipfile.ZipFile(path) as z:
-        root = ET.fromstring(z.read("word/document.xml"))
-    lines = []
-    for p in root.iter(NS + "p"):
-        text = "".join(n.text for n in p.iter(NS + "t") if n.text)
-        if text:
-            lines.append(text)
-    return "\n".join(lines)
+def parse_qa(md_path: Path, docx_path: Path, cover: bool = False) -> list[str]:
+    content, links = check_docx(md_path, docx_path, cover)
+    return content + links
 
 
-def parse_qa(md_path: Path, docx_path: Path) -> list[str]:
-    md = kit.load_module("md_to_docx", "md_to_docx.py")
-    raw = re.sub(r"^<!--.*?-->\s*\n?", "", md_path.read_text(encoding="utf-8"), flags=re.MULTILINE)
-    data = md.parse_md(raw)
-    text = docx_text(docx_path)
-    flat = re.sub(r"\s+", " ", text)
-    expected = [("name", data["name"])]
-    expected += [("contact", item["text"]) for item in kit.contact_items()]
-    for role in data["roles"]:
-        expected += [("job title", role["title"]), ("date range", role["dates"])]
-    return [f"missing {kind}: {value!r}" for kind, value in expected if value and value not in flat]
+def result(problems: list[str]) -> dict:
+    return {"status": "fail" if problems else "pass", "details": problems}
 
 
-def page_check(pdf_path: Path) -> str:
+def same_url(url: str) -> str:
+    """Equivalence Chrome applies when printing: lowercase scheme/host, empty web path -> "/".
+
+    Paths, queries, and fragments are compared exactly; a different destination still fails.
+    """
+    parts = urlsplit(url)
+    if parts.scheme.lower() not in ("http", "https"):
+        return url
+    return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path or "/", parts.query, parts.fragment))
+
+
+def pdf_checks(source: Path, pdf_path: Path, max_pages: int, cover: bool = False) -> dict:
+    if not pdf_path.is_file():
+        raise FileNotFoundError(f"Missing PDF: {pdf_path}")
     try:
         from pypdf import PdfReader
     except ImportError:
-        return "page check skipped (pip install pypdf to enable)"
-    reader = PdfReader(str(pdf_path))
-    report = [f"pages: {len(reader.pages)}"]
-    if len(reader.pages) > 1:
-        report.append(f"p1 ends:   {reader.pages[0].extract_text().strip()[-90:]!r}")
-        report.append(f"p2 starts: {reader.pages[1].extract_text().strip()[:60]!r}")
-    return "\n".join(report)
+        return {key: {"status": "skipped", "details": ["Install pypdf for PDF validation"]}
+                for key in ("pdf_content", "pdf_links", "pages")}
+    reader = PdfReader(str(pdf_path), strict=True)
+    fragments, expected_links = source_inventory(source, cover)
+    texts = [page.extract_text() or "" for page in reader.pages]
+    urls = set()
+    for page in reader.pages:
+        for ref in page.get("/Annots", []):
+            action = ref.get_object().get("/A")
+            if action:
+                url = action.get_object().get("/URI")
+                if url:
+                    urls.add(same_url(str(url)))
+    pages = len(reader.pages)
+    return {
+        "pdf_content": result(missing_content(fragments, "\n".join(texts))),
+        "pdf_links": result([f"missing PDF destination: {url}" for url in sorted({url for _, url in expected_links if same_url(url) not in urls})]),
+        "pages": {**result([] if 0 < pages <= max_pages else [f"{pages} pages violates policy (1–{max_pages})"]), "count": pages, "limit": max_pages},
+    }
 
 
 def wrap_screenshot(html_path: Path, out: Path, height: int) -> None:
-    kit.run_chrome(
-        "--hide-scrollbars",
-        f"--screenshot={out.resolve()}",
-        f"--window-size={PRINT_WIDTH_PX},{height}",
-        html_path.resolve().as_uri(),
-        output=out,
-    )
+    """Optional HTML preview, not evidence of PDF pagination."""
+    kit.run_chrome("--hide-scrollbars", f"--screenshot={out.resolve()}",
+                   f"--window-size={PRINT_WIDTH_PX},{height}", html_path.resolve().as_uri(), output=out)
+
+
+def render_pdf(pdf_path: Path) -> list[Path]:
+    digest = hashlib.sha256(pdf_path.read_bytes()).hexdigest()[:12]
+    directory = pdf_path.parent / f"{pdf_path.stem}-pages-{digest}"
+    renderer = shutil.which("pdftoppm")
+    if renderer:
+        directory.mkdir(exist_ok=True)
+        subprocess.run([renderer, "-scale-to", "1600", "-png", str(pdf_path.resolve()), str(directory / "page")],
+                       check=True, capture_output=True, timeout=60)
+    else:
+        try:
+            import pypdfium2
+        except ImportError:
+            return []
+        directory.mkdir(exist_ok=True)
+        with pypdfium2.PdfDocument(str(pdf_path)) as document:
+            for index in range(len(document)):
+                page = document[index]
+                bitmap = page.render(scale=1.5)
+                try:
+                    bitmap.to_pil().save(directory / f"page-{index + 1}.png")
+                finally:
+                    bitmap.close()
+                    page.close()
+    return sorted(directory.glob("page-*.png"), key=lambda p: int(re.search(r"(\d+)\.png$", p.name).group(1)))
+
+
+def run(source: Path, max_pages: int = 2, cover: bool = False, render: bool = True,
+        visual_review: str | None = None) -> dict:
+    checks = {}
+    try:
+        content, links = check_docx(source, source.with_suffix(".docx"), cover)
+        checks.update(docx_content=result(content), docx_links=result(links))
+    except Exception as exc:
+        # Malformed ZIP/XML/PDF inputs must produce a report, not a silent pass.
+        checks["docx_content"] = result([str(exc)])
+    pdf = source.with_suffix(".pdf")
+    try:
+        checks.update(pdf_checks(source, pdf, max_pages, cover))
+    except Exception as exc:
+        checks["pdf_content"] = result([str(exc)])
+    if render and pdf.exists():
+        try:
+            images = render_pdf(pdf)
+            checks["pdf_render"] = {"status": "pass" if images else "skipped", "details":
+                [str(p) for p in images] or ["Install pdftoppm or pypdfium2 + Pillow for actual PDF previews"]}
+        except Exception as exc:
+            checks["pdf_render"] = result([str(exc)])
+    else:
+        checks["pdf_render"] = {"status": "skipped", "details": ["PDF rendering not requested or file missing"]}
+    reviewed = bool(visual_review and visual_review.strip() and pdf.exists())
+    checks["visual_review"] = {"status": "pass" if reviewed else "skipped", "details":
+        [visual_review] if reviewed else ["Inspect actual PDF pages for clipping, wrapping, and page breaks"]}
+    statuses = {value["status"] for value in checks.values()}
+    overall = "failed" if "fail" in statuses else "incomplete" if "skipped" in statuses else "passed"
+    return {"schema_version": 1, "source": str(source), "pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest() if pdf.exists() else None,
+            "overall": overall, "checks": checks}
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="QA an exported resume (.md with .docx/.pdf/.html beside it).")
-    parser.add_argument("input", type=Path, help="Tailored resume .md")
-    parser.add_argument("--height", type=int, default=1800, help="Screenshot height in px")
-    parser.add_argument("--no-screenshot", action="store_true")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("input", type=Path)
+    parser.add_argument("--cover", action="store_true")
+    parser.add_argument("--max-pages", type=int, default=kit.load_profile().get("resume_max_pages", 2))
+    parser.add_argument("--json", type=Path, help="Default: qa.json beside the source")
+    parser.add_argument("--no-screenshot", action="store_true", help="Skip optional PDF rendering")
+    parser.add_argument("--html-preview", action="store_true", help="Also render HTML; not a PDF page check")
+    parser.add_argument("--height", type=int, default=1800)
+    parser.add_argument("--visual-reviewed", help="Record a completed review: reviewer and observations")
+    parser.add_argument("--require-complete", action="store_true", help="Exit 2 when any check is skipped")
     args = parser.parse_args(argv)
-
-    md_path = args.input
-    docx_path, pdf_path, html_path = (md_path.with_suffix(s) for s in (".docx", ".pdf", ".html"))
-    for path in (md_path, docx_path, pdf_path, html_path):
-        if not path.exists():
-            print(f"not found: {path} (run md_export.py first)", file=sys.stderr)
-            return 1
-
-    problems = parse_qa(md_path, docx_path)
-    print("parse QA: " + ("passed" if not problems else "FAILED"))
-    for problem in problems:
-        print(f"  - {problem}")
-    print(page_check(pdf_path))
-    if not args.no_screenshot:
-        shot = md_path.with_name(md_path.stem + "-wrap-check.png")
+    if args.max_pages < 1:
+        parser.error("--max-pages must be positive")
+    report = run(args.input, args.max_pages, args.cover, not args.no_screenshot, args.visual_reviewed)
+    if args.html_preview:
         try:
-            wrap_screenshot(html_path, shot, args.height)
-        except (RuntimeError, FileNotFoundError) as exc:
-            print(f"wrap check screenshot failed: {exc}", file=sys.stderr)
-            return 1
-        print(f"wrap check screenshot: {shot}")
-    return 1 if problems else 0
+            wrap_screenshot(args.input.with_suffix(".html"), args.input.with_name(args.input.stem + "-html-preview.png"), args.height)
+        except Exception as exc:
+            report["checks"]["html_preview"] = result([str(exc)])
+            report["overall"] = "failed"
+    output = args.json or args.input.with_name("qa.json")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print(f"QA: {report['overall']} ({output})")
+    for key, value in report["checks"].items():
+        print(f"  {key}: {value['status']}")
+        for detail in value["details"]:
+            print(f"    {detail}")
+    return 1 if report["overall"] == "failed" else 2 if args.require_complete and report["overall"] != "passed" else 0
 
 
 if __name__ == "__main__":

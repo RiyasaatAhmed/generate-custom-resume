@@ -38,5 +38,7 @@
 
   "auto_bold": true,
   "bold_terms": ["design system", "Core Web Vitals"],
-  "summary_bold_phrases": ["\\d+\\+\\s*years"]
+  "summary_bold_phrases": ["\\d+\\+\\s*years"],
+
+  "resume_max_pages": 2
 }
