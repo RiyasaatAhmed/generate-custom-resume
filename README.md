@@ -95,6 +95,20 @@ set `RESUME_KIT_HOME=/path/to/folder` in your shell profile.
 Local files do not mean local-only processing. What your agent sends to its model
 provider depends on the agent and its settings.
 
+## Editing with your own writing skill
+
+You can have a writing skill you already use, such as
+[clarity](https://github.com/addyosmani/clarity) (`npx skills add addyosmani/clarity -g`),
+polish the cover letter, outreach, and resume summary. Add an `## Editing` section to `candidate-notes.md` naming the skill,
+what it may edit, and any lines it must leave alone (the example notes show the format).
+Without that section the agent does a built-in editing pass and calls no other skill.
+
+Style edits can quietly change facts: a metric, a unit, a name, a link. So the agent saves
+each draft before editing and runs `scripts/edit_guard.py` on the before and after
+versions. Every changed number, link, email, quotation, or name, and every altered
+protected line, goes back to the evidence map and is reverted unless your sources support
+it. Resume bullets, titles, and dates are never edited.
+
 ## What each application contains
 
 ```text
@@ -109,6 +123,7 @@ applications/<company-role-date-id>/
 ├── upload/                 clean filenames, created only after checks pass
 ├── cover-letter.md         when requested or appropriate
 ├── outreach/               the chosen channel's draft
+├── edits/                  drafts saved before an editing pass, for the fact check
 ├── interview-prep.md       optional
 └── submitted/<version>/    copies and hashes of what you confirmed you submitted
 ```
