@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-import zipfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -13,14 +11,6 @@ import kit  # noqa: E402
 
 _load = kit.load_module
 DEFAULT_TEMPLATE = kit.DEFAULT_TEMPLATE
-
-
-def count_docx_links(docx_path: Path) -> int:
-    ns_w = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
-    ns_r = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
-    with zipfile.ZipFile(docx_path) as z:
-        root = ET.fromstring(z.read("word/document.xml"))
-    return sum(1 for _ in root.iter(f"{ns_w}hyperlink"))
 
 
 def count_pdf_links(html_path: Path) -> int:
@@ -37,6 +27,8 @@ def export(
     skip_pdf: bool,
     cover: bool = False,
 ) -> tuple[Path | None, Path | None]:
+    from document_checks import check_docx, source_inventory
+    source_inventory(md_path, cover=cover)
     docx_out = docx_path or md_path.with_suffix(".docx")
     pdf_out = pdf_path or md_path.with_suffix(".pdf")
     # Every profile contact with a url must survive as a hyperlink.
@@ -45,9 +37,9 @@ def export(
     if not skip_docx:
         mod = _load("md_to_cover", "md_to_cover.py") if cover else _load("md_to_docx", "md_to_docx.py")
         (mod.convert_docx if cover else mod.convert)(template, md_path, docx_out)
-        links = count_docx_links(docx_out)
-        if links < min_links:
-            raise RuntimeError(f"docx link check failed: expected {min_links}+ hyperlinks, got {links}")
+        content_problems, link_problems = check_docx(md_path, docx_out, cover=cover)
+        if content_problems or link_problems:
+            raise RuntimeError("DOCX validation failed:\n" + "\n".join(content_problems + link_problems))
 
     if not skip_pdf:
         mod = _load("md_to_cover", "md_to_cover.py") if cover else _load("md_to_pdf", "md_to_pdf.py")
@@ -75,8 +67,9 @@ def main(argv: list[str] | None = None) -> int:
         help=f"Base docx template (default: {DEFAULT_TEMPLATE})",
     )
     parser.add_argument("--cover", action="store_true", help="Export a cover letter (not a resume)")
-    parser.add_argument("--docx-only", action="store_true")
-    parser.add_argument("--pdf-only", action="store_true")
+    formats = parser.add_mutually_exclusive_group()
+    formats.add_argument("--docx-only", action="store_true")
+    formats.add_argument("--pdf-only", action="store_true")
     args = parser.parse_args(argv)
 
     if not args.input.exists():
@@ -98,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
             skip_pdf=args.docx_only,
             cover=args.cover,
         )
-    except (RuntimeError, FileNotFoundError) as exc:
+    except (RuntimeError, OSError, ValueError) as exc:
         print(exc, file=sys.stderr)
         return 1
 
