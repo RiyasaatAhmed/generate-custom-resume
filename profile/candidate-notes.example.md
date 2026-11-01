@@ -1,45 +1,51 @@
 # Candidate notes
 
-Personal rules the `/generate-custom-resume` command reads on every run. Anything written here
-overrides the command's defaults when they conflict. Delete the sections you do not need.
+Preferences override workflow style defaults. They do not authorize invented facts,
+false submission wording, or sending. Replace these fictional examples with your own.
 
 ## Sources of truth
 
 - Master resume: `profile/base-resume.md`
-- Extra variants (optional): `profile/base-resume-fullstack.md` for roles where backend is core
-- Portfolio / project list the command may skim for context: https://janedoe.dev/projects
-- Claims are allowed only if they appear in these sources or I confirm them in chat.
+- Optional additional base: `profile/base-resume-fullstack.md` when backend is core
+- Optional evidence bank: `profile/achievements.json`
+- Portfolio context: list only sources the assistant may inspect
+- Claims must come from supplied sources or my confirmed answers.
 
 ## Positioning
 
-- Standard headline (what my LinkedIn says): `Senior Frontend Engineer | TypeScript, React & Next.js | Design Systems`
+- Standard headline: `Senior Frontend Engineer | TypeScript, React & Next.js | Design Systems`
 - Strongest positioning: performance and accessibility on data-heavy products.
-- Target roles: Senior Frontend, Senior Full Stack (frontend-leaning), Product Engineer.
+- Target roles: Senior Frontend, frontend-leaning Full Stack, Product Engineer.
+
+## Eligibility facts
+
+Record residence, hiring-country eligibility, work authorization/sponsorship needs,
+employment preferences, and time-zone availability separately, only when confirmed.
+Unknown is acceptable. US time-zone overlap does not imply US residence/authorization.
 
 ## Domain rules
 
-Example of a domain rule. Write your own, or delete this section.
-
-**Health tech roles:** my last role is clinical documentation at Northwind Health. For any health tech,
-payer, provider, or clinical post, lead the Northwind bullets with the domain wins (charting time,
-accessibility audit for a hospital contract) and put generic frontend wins second. Use the domain
-vocabulary the post uses, and spell out acronyms on first use when the post does
-(`Electronic Health Record (EHR)`, `Protected Health Information (PHI)`). For non-healthcare roles,
-keep at most one healthcare bullet and translate the rest into the target domain's language.
+For health-tech roles, prioritize relevant clinical-workflow evidence if true. For
+other domains, explain transferable mechanisms without claiming experience in that
+new domain. Do not add healthcare acronyms or compliance claims without support.
 
 ## Cover letter voice
 
-- Tone default: warm and direct. Light humor only when the company writes playfully.
-- Inline links to use: janedoe.dev, github.com/janedoe
+- Warm and direct; preserve natural first-person ownership.
+- Use one specific employer connection and a real decision/achievement.
+- Follow my punctuation preferences if supplied; do not invent motivation or stories.
 
-## Outreach voice (Phase 4)
+## Outreach voice
 
-These two lines are used verbatim in the post-apply LinkedIn message. Leave them out to use the defaults.
-
-- Opener: `I have applied at <Company> for the position of <exact job title>. I think I'm a strong match for this role.`
-- Closer: `I've applied for the role and wanted to reach out to you personally, as I'm really excited about it.`
+- Default: a concise relevant message with one clear request.
+- If I request the legacy five-block format, retain it as my preference.
+- Preserve preferred opener/closer wording where truthful. Before confirmed submission,
+  use pre-application wording even if an old preferred opener says “I have applied.”
+- Include a proof link only when relevant and wanted.
+- Follow-ups: respect employer timelines; stop on refusal.
 
 ## Hard rules
 
-- Never access LinkedIn, for any reason.
-- Never mention my current employer's customers by name.
+- Never access LinkedIn by any means.
+- Never disclose former employers' private code, customer names, or patient data.
+- Do not send, submit, publish, or commit unless I separately request that action.
