@@ -45,17 +45,18 @@ def parse_cover(text: str) -> dict:
     i = 0
     while i < len(lines) and not lines[i].strip():
         i += 1
-    name = ""
+    name = kit.load_profile().get("name", "")
+    headline = ""
     if i < len(lines) and lines[i].startswith("# "):
         name = lines[i][2:].strip()
         i += 1
-    headline = ""
-    while i < len(lines) and lines[i].strip() != "---":
-        s = lines[i].strip()
-        if s.startswith("**") and not headline:
-            headline = re.sub(r"\*\*(.+?)\*\*", r"\1", s).strip()
-        i += 1
-    if i < len(lines) and lines[i].strip() == "---":
+        while i < len(lines) and lines[i].strip() != "---":
+            s = lines[i].strip()
+            if s.startswith("**") and not headline:
+                headline = re.sub(r"\*\*(.+?)\*\*", r"\1", s).strip()
+            i += 1
+        if i == len(lines):
+            raise ValueError("Cover letter header requires a --- separator before the body")
         i += 1
     blocks: list[list[str]] = []
     cur: list[str] = []
@@ -67,6 +68,10 @@ def parse_cover(text: str) -> dict:
             cur = []
     if cur:
         blocks.append(cur)
+    if not blocks or not any(re.search(r"\w", line) for block in blocks for line in block):
+        raise ValueError("Cover letter body is empty")
+    if not name.strip():
+        raise ValueError("Cover letter needs a name in the profile or # Name header")
     return {"name": name, "headline": headline, "blocks": blocks}
 
 
@@ -210,6 +215,7 @@ def render_html(data: dict) -> str:
 
 def convert_pdf(md_path: Path, output: Path) -> None:
     data = parse_cover(md_path.read_text(encoding="utf-8"))
+    output.parent.mkdir(parents=True, exist_ok=True)
     html_path = output.with_suffix(".html")
     html_path.write_text(render_html(data), encoding="utf-8")
     pdf.print_pdf(html_path, output)
