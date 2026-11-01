@@ -1,14 +1,12 @@
-# Your personal data stays local. Only the *.example.* files are tracked.
-profile/*
-!profile/*.example.*
+# Personal data belongs in ~/resume-kit ($RESUME_KIT_HOME). If you point that at
+# a clone of this repo, these rules keep your profile and applications out of git.
+/profile/
+/applications/
 
-# Generated applications (resumes, cover letters, outreach)
-applications/*
-!applications/.gitkeep
-
-# Rendered by setup.sh with this machine's absolute path
+# Local agent settings and installs
 .claude/
 .cursor/
+.agents/
 
 __pycache__/
 *.pyc
