@@ -48,6 +48,15 @@ Do not add healthcare acronyms or compliance claims that the sources do not supp
 - Include a proof link only when it is relevant and I want it.
 - Follow-ups: respect the employer's timeline, and stop if they decline.
 
+## Editing
+
+Optional. Delete this section to use the built-in editing pass. The skill named here must
+be installed in your agent; a fact check runs after every edit either way.
+
+- Editing skill: clarity (rewrite mode)
+- Apply to: cover letter, outreach, resume summary
+- Never edit: my preferred outreach opener and closer, job titles, dates, metrics
+
 ## Hard rules
 
 - Never access LinkedIn by any means.
