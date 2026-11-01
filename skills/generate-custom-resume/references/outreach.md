@@ -22,6 +22,22 @@ superiority. Preserve requested wording except where it would make a false factu
 If an opener says “I have applied” but no submission is confirmed, use a truthful
 pre-application opener or label it an unsendable post-application draft. Explain the change.
 
+Keep direct messages short. In LinkedIn's data on tens of millions of recruiter InMails,
+messages under 400 characters drew 22% more replies than average, those up to 800 stayed
+above average, and those over 1,200 fell 11% below; individually written messages beat
+bulk sends by about 15%. Those were recruiters writing to candidates, so treat the numbers
+as direction, not a guarantee in reverse. Aim under 400 characters for a DM or InMail;
+the checker fails one over 800. Unless the candidate asked for the legacy format, every
+message has three parts:
+
+1. **Why this person:** one specific reason (their team's work, the role, a shared link).
+2. **One proof:** the single achievement that best matches their top priority.
+3. **One small ask:** a single question that is easy to answer, such as a 15-minute call
+   or the right person to talk to. Several questions or offers dilute it.
+
+Do not pitch a list of skills, and skip openers such as "I hope this message finds you
+well" or "I came across your profile"; the checker warns about common ones.
+
 Use plain text by default. Unicode mathematical bold is an optional legacy style, not
 required; avoid it when accessibility or the destination makes it unsuitable. Generate
 it with `outreach.py bold` if requested. Do not impose a metric in every sentence.
@@ -43,10 +59,15 @@ counting method. Verify the actual destination's limit before sending. Connectio
 DMs, and InMail are different channels. No automated sending is part of this workflow.
 
 If follow-up planning is requested, a starting policy is one useful follow-up after
-five to seven business days and at most one later final follow-up. Label this as a
+five to seven business days and at most one later final follow-up; in LinkedIn's data
+90% of replies arrived within a week, and Friday and Saturday sends drew slightly fewer. Label this as a
 configurable convention. Respect the employer's timeline, stop on refusal, and never
 manufacture urgency or contact multiple people repeatedly to pressure a decision.
 
 After actual contact is confirmed, record it with `applications.py event ... contacted`.
 Keep contact provenance (source URL/date/confidence) and channel in `research.md` and
 the event note. Contacting is separate from submitting an application.
+
+Source for the length, personalization, and timing figures: [LinkedIn Talent Blog, "These
+InMails Get the Best Response Rates"](https://www.linkedin.com/business/talent/blog/talent-strategy/these-inmails-get-best-response-rates)
+(InMails sent May 2021–April 2022; the author calls them averages, not laws).
