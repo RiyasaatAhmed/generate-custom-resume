@@ -1,76 +1,97 @@
 # generate-custom-resume
 
-Create a truthful, evidence-based application package from a job posting in **Claude Code** or **Cursor**:
+An agent skill that turns a job post into a truthful, evidence-based application package. It works in Claude Code, Cursor, Antigravity, Codex, Gemini CLI, GitHub Copilot, and any other agent that reads [Agent Skills](https://agentskills.io).
 
 ```text
 /generate-custom-resume https://example.com/careers/frontend-engineer
 ```
 
-The workflow assesses fit and practical eligibility, researches the employer, maps requirements to real achievements, writes the resume and appropriate cover letter/outreach, and validates exports. It helps make relevant experience easy to evaluate; it does not guarantee an interview or an offer.
+The agent assesses fit and practical eligibility, researches the employer, maps each requirement to your real achievements, writes the resume plus a cover letter or outreach when appropriate, exports DOCX and PDF, and checks that nothing was lost in export. It never invents experience, metrics, or company facts, and it never submits applications or sends messages for you. It makes relevant experience easy to evaluate; it does not guarantee an interview.
 
-## Setup
+## Install
 
-Core scripts require Python 3.9+. PDF export requires Chrome/Chromium (Edge or Brave also work). DOCX export uses the standard library. Optional `pypdf` enables PDF content, link, and page checks; `pypdfium2` plus Pillow or the `pdftoppm` program enables actual PDF page previews.
+Requirements: Python 3.9+. PDF export needs Chrome, Chromium, Edge, or Brave; DOCX export works without a browser. Optional: `pip install pypdf` enables PDF content and link checks, and `pip install pypdfium2 pillow` (or poppler's `pdftoppm`) enables PDF page previews.
 
-```bash
-./setup.sh
-# Install without a browser smoke test:
-./setup.sh --skip-smoke
-# Optional user-level installation, only if wanted:
-./setup.sh --global --skip-smoke
+**Claude Code** (plugin marketplace):
+
+```text
+/plugin marketplace add RiyasaatAhmed/generate-custom-resume
+/plugin install generate-custom-resume@riyasaat-skills
 ```
 
-Setup creates missing profile files from fictional examples and installs project-local command/skill links. It never overwrites an existing profile or an unrelated skill link, and it does not create `profile/achievements.json` (the bank is optional and must hold only your real claims). Setup also reports whether pypdf and a PDF page renderer are available. Global command collisions are backed up. The command loads this kit's explicit skill path even when another skill has the same name. Missing Chrome does not prevent DOCX-only use.
+On Claude Code 2.1.275 or later this is one step: `/plugin install generate-custom-resume --marketplace RiyasaatAhmed/generate-custom-resume`. Plugin skills are namespaced, so run `/generate-custom-resume:generate-custom-resume <job post>`, or just ask Claude to tailor your resume for a job.
 
-Replace the example profile before generating a real application:
+**Cursor**: install from the Cursor plugin marketplace, or go to *Customize → From GitHub Repository* and paste `https://github.com/RiyasaatAhmed/generate-custom-resume`.
 
-- `profile/base-resume.md`: full, truthful experience and optional bullet-bank comments.
-- `profile/profile.json`: identity, contact details, links, and presentation settings.
-- `profile/candidate-notes.md`: positioning, access restrictions, and voice preferences.
-- Optional `profile/achievements.json`: reusable evidence; see `achievements.example.json` for the schema. Do not copy fictional claims into your real bank. An empty bank can start as `{"schema_version": 1, "achievements": []}`.
+**Antigravity, Codex, Gemini CLI, Copilot, OpenCode, and other agents** (via the [skills CLI](https://github.com/vercel-labs/skills)):
 
-Personal profile files and generated applications are Git-ignored by default. This does not guarantee local-only processing: what the assistant sends to its provider or tools depends on the chosen application and configuration. Do not place private candidate data in tracked examples or tests.
+```bash
+npx skills add RiyasaatAhmed/generate-custom-resume -g
+```
 
-Open this folder in Claude Code or Cursor, then invoke the command. If a site blocks retrieval, paste the job text. Existing applications can be revised by supplying their folder. Re-run setup after moving the kit or changing the command. Broken links left by the old location are repointed; links to other existing skills are reported and left alone.
+`-g` installs for your user rather than one project; the CLI asks which agents to install for.
+
+**From a clone** (for development, or to pin a local copy):
+
+```bash
+git clone https://github.com/RiyasaatAhmed/generate-custom-resume
+cd generate-custom-resume && ./install.sh
+```
+
+`install.sh` symlinks the skill into `~/.claude/skills` (Claude Code) and `~/.agents/skills` (read by Cursor, Antigravity, Codex, Gemini CLI, and others). Use `--target claude` or `--target agents` to link only one, `--smoke` to test PDF export, and `--uninstall` to remove the links. It never replaces a skill installed by something else.
+
+To install by hand, copy `skills/generate-custom-resume/` into your agent's skills folder. The skill is self-contained: its scripts, references, and templates live inside that folder.
+
+## Your data
+
+Your profile and applications live in a data folder outside the installed skill, so updates never touch them:
+
+```text
+~/resume-kit/            or $RESUME_KIT_HOME
+├── profile/
+│   ├── profile.json         identity, contacts, links, presentation settings
+│   ├── base-resume.md       full, truthful master resume (bullet-bank comments allowed)
+│   ├── candidate-notes.md   positioning, voice, and access rules the agent must follow
+│   └── achievements.json    optional evidence bank
+└── applications/        one folder per job
+```
+
+On first run the agent calls `scripts/init_kit.py`, which creates this folder with fictional starter files (Jane Doe) and never overwrites existing files. Replace the examples with your own details before generating a real application; the agent refuses to treat the examples as your experience. To use a different folder, set `RESUME_KIT_HOME=/path/to/folder` in your shell profile.
+
+Keeping files local does not mean local-only processing: what your agent sends to its model provider depends on the agent and its settings.
 
 ## What each application contains
 
 ```text
-applications/<company-role-requisition-date-unique-id>/
+applications/<company-role-date-id>/
 ├── application.json        preparation, events, submission history
 ├── job-post.md             archived source and retrieval date
-├── evidence-map.json       requirements and direct/adjacent/missing/unknown evidence
+├── evidence-map.json       requirements matched to direct/adjacent/missing/unknown evidence
 ├── research.md             sourced observations, hypotheses, changes, open questions
-├── resume.md
-├── resume.docx
-├── resume.pdf
-├── resume.html
+├── resume.md / .docx / .pdf / .html
 ├── qa.json                 pass/fail/skipped for each check
-├── resume-pages-<hash>/     actual PDF previews, when a renderer is available
-├── upload/                 clean filenames selected for submission
-├── cover-letter.md         when requested/appropriate
-├── outreach/               selected channel drafts
-├── interview-prep.md       optional evidence-based interview preparation
-└── submitted/<version>/    copies and hashes of confirmed submissions
+├── resume-pages-<hash>/    actual PDF page previews, when a renderer is available
+├── upload/                 clean filenames, created only after checks pass
+├── cover-letter.md         when requested or appropriate
+├── outreach/               the chosen channel's draft
+├── interview-prep.md       optional
+└── submitted/<version>/    copies and hashes of what you confirmed you submitted
 ```
-
-The workflow follows this sequence:
 
 | Step | Decision/output |
 | --- | --- |
 | Fit | Compare explicit requirements and eligibility with confirmed candidate facts |
-| Research | Save employer facts with sources; distinguish hypotheses and unknowns |
-| Evidence | Select defensible achievements and identify material questions |
-| Writing | Build one coherent case across resume, letter, and outreach |
-| Export/QA | Preserve content and links, check pages, inspect actual PDF previews |
+| Research | Save employer facts with sources; label hypotheses and unknowns |
+| Evidence | Select defensible achievements; ask about material gaps |
+| Writing | One coherent case across resume, letter, and outreach |
+| Export/QA | Preserve content and links, check page count, inspect actual PDF pages |
 | Records | Keep drafting, contacting, and submitting distinct |
-| Learning | Track submitted applications and later outcomes with clear denominators |
 
-No invented skills, experience, metrics, referrals, or company facts. No automatic messages, applications, publishing, or commits. Candidate preferences govern style and access; they cannot make an unsupported claim true. Time-zone overlap does not establish work authorization or residence.
+Candidate notes govern style and access (for example, "never access LinkedIn"); they cannot make an unsupported claim true. Time-zone overlap does not establish work authorization or residence.
 
 ## Resume source format
 
-The renderer supports a deliberate Markdown dialect, not arbitrary Markdown:
+The exporter supports a deliberate Markdown dialect, not arbitrary Markdown:
 
 ```markdown
 # Your Name
@@ -92,8 +113,6 @@ Frontend: TypeScript, React
 ## Education
 **B.S. Computer Science** | 2015 - 2019
 University Name
-**M.S. Computing** | 2019 - 2021
-Another University
 
 ## Projects
 ### Relevant Project
@@ -111,11 +130,9 @@ Issuer
 Relevant detail.
 ```
 
-Sections are optional; omit empty headings. `Work Experience` is also accepted. Unknown sections, malformed experience entries, tables, and code blocks fail explicitly. Each source bullet is one Markdown line, though it may wrap naturally in the output. Additional education entries begin with a bold degree or `###` heading. HTML comments are omitted from exports; the agent can select true achievements from bullet-bank comments.
+Sections are optional; `Work Experience` is also accepted. Unknown sections, malformed entries, tables, and code blocks fail explicitly. Each bullet is one source line. HTML comments are left out of exports, so the master resume can hold a bullet bank the agent selects from. There is no forced page count, bullet count, or number in every bullet.
 
-Use readable one- or two-page output according to relevance and employer instructions. There is no forced single-line bullet, fixed bullet count per role, or requirement to invent a number for every achievement. Preserve the actual job titles and dates.
-
-Contacts come from `profile.json` when provided. Bare `[View Project]` tokens resolve through `company_projects` and move from experience bullets to the company row. Other bare tokens resolve through `link_labels`. Standard `[label](url)` links are supported. Unresolved tokens fail export.
+Contacts come from `profile.json`. Bare `[View Project]` tokens resolve through `company_projects` and move to the company row; other bare tokens resolve through `link_labels`. Unresolved tokens fail export.
 
 ## Profile settings
 
@@ -129,95 +146,62 @@ Contacts come from `profile.json` when provided. Bare `[View Project]` tokens re
 | `company_projects` | Project links by employer name |
 | `company_websites` | Employer name links |
 | `company_about` | Optional factual employer context |
-| `auto_bold` | Auto-emphasize supported metrics/skill terms; manual bold always works |
-| `bold_terms`, `summary_bold_phrases` | Additional auto-bold terms/summary regexes |
+| `auto_bold` | Auto-emphasize metrics and skill terms; manual bold always works |
+| `bold_terms`, `summary_bold_phrases` | Extra auto-bold terms and summary regexes |
 | `resume_max_pages` | Default QA page budget, overridden by `--max-pages` |
 
-`RESUME_PROFILE=/path/to/profile.json` selects a different profile. `CHROME_PATH=/path/to/browser` selects a Chromium-based browser. Scripts resolve their own dependencies independently of the current working directory.
+Environment variables: `RESUME_KIT_HOME` (data folder), `RESUME_PROFILE` (a different profile.json), `CHROME_PATH` (a specific Chromium-based browser).
 
-## Export and check
+## Running the scripts yourself
 
-```bash
-python3 scripts/md_export.py applications/<id>/resume.md
-python3 scripts/qa.py applications/<id>/resume.md --max-pages 2
-
-# DOCX-only export without Chrome:
-python3 scripts/md_export.py applications/<id>/resume.md --docx-only
-
-# Plain-text or legacy-header letter, when an attachment is needed:
-python3 scripts/md_export.py applications/<id>/cover-letter.md --cover
-python3 scripts/qa.py applications/<id>/cover-letter.md --cover --max-pages 1 --json applications/<id>/cover-letter-qa.json
-```
-
-Other export options: `--pdf-only`, `--docx <path>`, `--pdf <path>`, `--template <path>`. `--docx-only` and `--pdf-only` are mutually exclusive. The main QA command expects sibling DOCX/PDF files; a DOCX-only export performs its own source-content/link checks but is not a complete PDF validation.
-
-A letter can be plain greeting/body/sign-off, or use the old `# Name`, optional bold headline, `---`, body format. Empty bodies fail before export.
-
-QA checks retained text from raw source, DOCX label/URL relationships, PDF URI destinations, and a configured page limit. It writes `qa.json`. Results are `passed`, `failed`, or `incomplete`. Exit 1 means failure; with `--require-complete`, exit 2 means skipped checks. Without that flag, incomplete optional checks exit 0 but are still reported as incomplete. These checks do not certify any particular ATS.
-
-Actual PDF previews need `pdftoppm` or `pypdfium2` + Pillow. Rendering is not visual inspection. Inspect every page, then use `--visual-reviewed "reviewer and observations"` only if that inspection occurred. The report includes the current PDF hash. `--no-screenshot` skips rendering; `--html-preview` provides a separate HTML preview, not a pagination check. Missing tools are reported honestly. Do not claim an incomplete QA run is fully verified.
-
-## Evidence validation
+The agent runs these for you. Paths below assume a clone; `S=skills/generate-custom-resume/scripts` and `A=~/resume-kit/applications/<id>`.
 
 ```bash
-python3 scripts/evidence.py bank profile/achievements.json
-python3 scripts/evidence.py map applications/<id>/evidence-map.json --bank profile/achievements.json
+python3 $S/init_kit.py                                  # create/check the data folder
+python3 $S/md_export.py $A/resume.md                    # DOCX + PDF (--docx-only works without Chrome)
+python3 $S/qa.py $A/resume.md --max-pages 2             # writes $A/qa.json
+python3 $S/md_export.py $A/cover-letter.md --cover
+python3 $S/evidence.py map $A/evidence-map.json         # add --bank ~/resume-kit/profile/achievements.json
+python3 $S/outreach.py check $A/outreach/recruiter.txt --channel recruiter --application $A/application.json
+python3 $S/applications.py init --company "Example Co" --role "Engineer"
+python3 $S/applications.py event $A ready --note "Reviewed documents and QA"
+python3 $S/applications.py submit $A upload/Jane-Doe-Resume.pdf --confirm-submitted   # only after YOU submitted
+python3 $S/applications.py summary --group-by role_family
 ```
 
-See [the evidence guide](skills/generate-custom-resume/references/evidence.md) and [the fictional map](templates/evidence-map.example.json). Legacy profiles can use source references and excerpts instead of achievement IDs; omit `--bank` in that case. The validators check structure and references, not real-world truth or whether a number is causally attributable to the candidate.
+QA compares the source with DOCX text and links, PDF text and link destinations, and the page budget. Results are pass, fail, or skipped per check; `--require-complete` makes skipped checks exit 2. Rendering pages is not visual inspection: `--visual-reviewed "notes"` is for after someone actually looked at every page. These checks do not certify any particular ATS.
 
-## Outreach
+`outreach.py check` flags unresolved placeholders, missing subjects, overlong messages, and "I have applied" wording without a confirmed submission. `applications.py submit` records something you already did; it never submits. Outcome rates count only submitted applications, and small samples do not prove causation.
 
-```bash
-python3 scripts/outreach.py check applications/<id>/outreach/hiring-manager.txt --channel hiring-manager --application applications/<id>/application.json
-python3 scripts/outreach.py check applications/<id>/outreach/connection.txt --channel connection --draft
-python3 scripts/outreach.py bold "Design Systems"
-```
-
-Channels: `connection`, `recruiter`, `hiring-manager`, `inmail`, `email`, `referral`, `follow-up`, `legacy`. The existing five-block style remains optional. Email/InMail subjects go above a `// ---` separator, each bare subject on its own line. Other channels can contain just the body. Empty bodies fail. `--draft` permits unresolved placeholders but does not make a draft send-ready. `--limit N` changes the editorial budget. Local codepoint/byte counts are not claims about current platform limits.
-
-Post-application wording requires a record with confirmed `applied_at`. Prefer truthful pre-application wording until then. The checker is a guard for common phrases, not a semantic truth detector; review all wording before use.
-
-## Application history
-
-```bash
-python3 scripts/applications.py init --company "Example Co" --role "Engineer" --requisition "REQ-123"
-python3 scripts/applications.py event applications/<id> ready --note "Reviewed documents and QA"
-# Only AFTER the user actually submitted these files:
-python3 scripts/applications.py submit applications/<id> upload/Jane-Doe-Resume.pdf --confirm-submitted
-python3 scripts/applications.py event applications/<id> contacted --note "User confirmed recruiter contact"
-python3 scripts/applications.py event applications/<id> screening --note "Screen scheduled"
-python3 scripts/applications.py verify applications/<id>
-python3 scripts/applications.py summary applications --group-by role_family
-```
-
-`submit` records an action already taken; it never submits anything. It copies the exact named files into a fresh snapshot with hashes. Revisions leave those snapshots alone. `verify` detects accidental missing/modified artifacts and manifests. Contact before application is valid and does not imply submission. The old Markdown log is historical context, not proof of submission; it is not automatically migrated.
-
-Reports retain prepared/submitted counts and post-submission outcomes. Rates with no submitted applications are null. Small nonrandom samples do not establish that a template caused a hire.
-
-## Tests and maintenance
+## Development
 
 ```bash
 python3 -m unittest discover -s tests -v
-bash -n setup.sh
-python3 scripts/smoke.py
+python3 skills/generate-custom-resume/scripts/smoke.py   # exports fictional fixtures; needs Chrome
+claude plugin validate . --strict
 ```
 
-Unit tests use temporary directories and fictional profiles. `smoke.py` exports fictional base and extended resumes plus a plain-text letter, retains artifacts in a new temp folder, and reports skipped visual checks. Optional `--output <empty-dir>` selects where to inspect outputs. Browser failures may require the host's execution permission. No tests should modify a real candidate profile or send messages.
+Tests use temporary folders and fictional profiles; they never touch a real profile, HOME, or send anything.
 
-The main workflow is [skills/generate-custom-resume/SKILL.md](skills/generate-custom-resume/SKILL.md); focused references contain the detailed guidance. `commands/generate-custom-resume.md` is a small host entrypoint. The two cover-letter skill names are compatibility entrypoints to one shared guide. Clarity remains available as an optional editing aid.
+```text
+.claude-plugin/          Claude Code plugin + marketplace manifests
+.cursor-plugin/          Cursor plugin + marketplace manifests
+skills/generate-custom-resume/
+├── SKILL.md             the workflow (Agent Skills format)
+├── references/          detailed guidance loaded only when a step needs it
+├── scripts/             export, QA, evidence, outreach, and records helpers
+└── assets/              DOCX template, fictional starter profile, example evidence map
+install.sh               link a clone into local agents
+tests/
+```
 
-DOCX styling still comes from `templates/resume-template.docx`. Custom templates must retain the 17 prototype paragraphs in the order documented by `PROTO` in `scripts/md_to_docx.py`. PDF styling is in `scripts/md_to_pdf.py`. Keep content and styling changes separate when troubleshooting.
+DOCX styling comes from `assets/resume-template.docx`. A custom template must keep the 17 prototype paragraphs in the order documented by `PROTO` in `scripts/md_to_docx.py`. PDF styling is in `scripts/md_to_pdf.py`.
 
-`./setup.sh --uninstall-global` removes matching kit-owned global links/commands. It does not delete candidate data or project-local files.
-
-## Credits and license
-
-MIT. Bundled compatibility skills retain their original licenses: Claude Office Skills Contributors (`cover-letter`), Resume Skills (`cover-letter-generator`), and Addy Osmani (`clarity`).
+When releasing, bump `version` in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.cursor-plugin/plugin.json`, and `metadata.version` in `SKILL.md`.
 
 ## Research basis and limits
 
-The workflow's writing and formatting defaults draw on these sources. Each supports a narrow point, not a universal rule:
+The writing and formatting defaults draw on these sources. Each supports a narrow point, not a universal rule:
 
 - [CareerOneStop formatting](https://cloudfront.careeronestop.org/JobSearch/Resumes/ResumeGuide/formatting.aspx): readable layouts and one or two pages based on experience.
 - [Harvard resume/letter guidance](https://careerservices.fas.harvard.edu/resources/create-a-strong-resume/): specific, factual, tailored writing and relevant examples.
@@ -227,4 +211,8 @@ The workflow's writing and formatting defaults draw on these sources. Each suppo
 - [OPM work samples](https://www.opm.gov/policy-data-oversight/assessment-and-selection/other-assessment-methods/work-samples-and-simulations/): job-relevant demonstrations assess competencies; unsolicited portfolio benefits remain an inference.
 - [NBER writing-assistance study](https://www.nber.org/papers/w30886): an 8% relative hiring increase in one online-labor-market experiment, not a guarantee for this kit.
 
-No actual ATS upload or application-conversion history was used to validate this kit. Local QA confirms that content and links survive export; it does not certify any particular ATS.
+No actual ATS upload or application-conversion history was used to validate this kit.
+
+## License
+
+MIT © Riyasaat Ahmed Rahul
