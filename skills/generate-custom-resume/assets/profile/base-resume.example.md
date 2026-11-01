@@ -1,6 +1,6 @@
-<!-- Master base resume. Every tailored resume is built from this file by /generate-custom-resume. -->
-<!-- Keep it true and complete: the command only selects and reframes, it never invents. -->
-<!-- Bullet bank: real wins you leave off the default cut go in one-line comments under a role. -->
+<!-- Master resume: the generate-custom-resume skill builds every tailored resume from this file. -->
+<!-- Keep it true and complete. The skill selects and reframes what is here; it never invents. -->
+<!-- Bullet bank: put real wins that are not in the default cut in one-line comments under a role. -->
 
 # Jane Doe
 

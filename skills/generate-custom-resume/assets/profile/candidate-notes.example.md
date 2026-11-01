@@ -1,15 +1,18 @@
 # Candidate notes
 
-Preferences override workflow style defaults. They do not authorize invented facts,
-false submission wording, or sending. Replace these fictional examples with your own.
+The agent reads this file on every run. Your notes override the skill's default style
+and positioning, but they cannot authorize an invented fact, wording that falsely says
+you applied, or sending anything. Everything below is a fictional example; replace it
+with your own.
 
 ## Sources of truth
 
 - Master resume: `profile/base-resume.md`
-- Optional additional base: `profile/base-resume-fullstack.md` when backend is core
+- Optional second base, used only when backend work is core to the role:
+  `profile/base-resume-fullstack.md`
 - Optional evidence bank: `profile/achievements.json`
-- Portfolio context: list only sources the assistant may inspect
-- Claims must come from supplied sources or my confirmed answers.
+- Portfolio context: list only the sources the agent may read.
+- Claims must come from these sources or from answers I confirm.
 
 ## Positioning
 
@@ -19,33 +22,34 @@ false submission wording, or sending. Replace these fictional examples with your
 
 ## Eligibility facts
 
-Record residence, hiring-country eligibility, work authorization/sponsorship needs,
-employment preferences, and time-zone availability separately, only when confirmed.
-Unknown is acceptable. US time-zone overlap does not imply US residence/authorization.
+Record each of these separately, and only once confirmed: where you live, which
+countries can hire you, work authorization and sponsorship needs, employment
+preferences, and the hours you can work. "Unknown" is a fine answer. Overlapping with US
+time zones does not mean you live in the US or can work there.
 
 ## Domain rules
 
-For health-tech roles, prioritize relevant clinical-workflow evidence if true. For
-other domains, explain transferable mechanisms without claiming experience in that
-new domain. Do not add healthcare acronyms or compliance claims without support.
+For health tech roles, lead with clinical-workflow evidence when it is true. For other
+domains, explain which methods transfer without claiming experience in the new domain.
+Do not add healthcare acronyms or compliance claims that the sources do not support.
 
 ## Cover letter voice
 
-- Warm and direct; preserve natural first-person ownership.
-- Use one specific employer connection and a real decision/achievement.
-- Follow my punctuation preferences if supplied; do not invent motivation or stories.
+- Warm and direct; keep natural first-person ownership.
+- Use one specific connection to the employer and one real decision or achievement.
+- Follow my punctuation preferences if I give any; never invent motivation or stories.
 
 ## Outreach voice
 
-- Default: a concise relevant message with one clear request.
-- If I request the legacy five-block format, retain it as my preference.
-- Preserve preferred opener/closer wording where truthful. Before confirmed submission,
-  use pre-application wording even if an old preferred opener says “I have applied.”
-- Include a proof link only when relevant and wanted.
-- Follow-ups: respect employer timelines; stop on refusal.
+- Default: a short, relevant message with one clear request.
+- If I ask for the legacy five-block format, keep using it.
+- Keep my preferred opener and closer wherever they are true. Until I confirm I have
+  submitted, use pre-application wording, even if my usual opener says "I have applied."
+- Include a proof link only when it is relevant and I want it.
+- Follow-ups: respect the employer's timeline, and stop if they decline.
 
 ## Hard rules
 
 - Never access LinkedIn by any means.
-- Never disclose former employers' private code, customer names, or patient data.
-- Do not send, submit, publish, or commit unless I separately request that action.
+- Never disclose a former employer's private code, customer names, or patient data.
+- Do not send, submit, publish, or commit unless I separately ask for that action.
