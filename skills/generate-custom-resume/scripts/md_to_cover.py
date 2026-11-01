@@ -28,7 +28,7 @@ TEMPLATE = kit.DEFAULT_TEMPLATE
 CSS = """
 @page { size: A4; margin: 0.8in 0.9in; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 10.5pt; line-height: 1.5; color: #1a1a1a; }
+body { font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-size: 10.5pt; line-height: 1.5; color: #1a1a1a; }
 header { text-align: center; margin-bottom: 18px; }
 h1 { font-size: 20pt; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
 .headline { font-size: 10pt; font-weight: 600; color: #333; margin-bottom: 3px; }

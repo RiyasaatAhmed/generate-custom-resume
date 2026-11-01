@@ -14,7 +14,7 @@ import kit  # noqa: E402
 CSS = """
 @page { size: A4; margin: 0.55in 0.6in; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 9.5pt; line-height: 1.35; color: #1a1a1a; }
+body { font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-size: 9.5pt; line-height: 1.35; color: #1a1a1a; }
 h1 { font-size: 20pt; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
 .headline { font-size: 10pt; font-weight: 600; color: #333; margin-bottom: 3px; text-align: center; }
 .meta, .contact { font-size: 9pt; color: #444; text-align: center; }

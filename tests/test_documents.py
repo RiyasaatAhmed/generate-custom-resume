@@ -240,6 +240,24 @@ class DocumentTests(unittest.TestCase):
         report = qa.pdf_checks(source, source.with_suffix(".pdf"), max_pages=2)
         self.assertEqual(report["pdf_content"]["status"], "pass", report["pdf_content"])
 
+    def test_pdf_text_keeps_bold_and_italic_phrases_on_one_line(self):
+        # ATS parsers read the PDF's text layer. With macOS Helvetica Neue, Chrome embedded
+        # bold/italic text so extractors split "Jane Doe" into one word per line.
+        try:
+            from pypdf import PdfReader
+            kit.find_chrome()
+        except (ImportError, FileNotFoundError, RuntimeError):
+            self.skipTest("needs pypdf and Chrome")
+        source = self.path / "resume.md"
+        source.write_text((ROOT / "assets/profile/base-resume.example.md").read_text(), encoding="utf-8")
+        md_to_pdf.convert(source, source.with_suffix(".pdf"))
+        lines = {line.strip() for page in PdfReader(str(source.with_suffix(".pdf"))).pages
+                 for line in (page.extract_text() or "").splitlines()}
+        for phrase in ("Jane Doe", "Senior Frontend Engineer | TypeScript, React & Next.js | Design Systems"):
+            self.assertIn(phrase, lines)
+        self.assertTrue(any(line.startswith("Senior Frontend Engineer") and "|" not in line for line in lines),
+                        "role title should extract as one line")
+
     def test_pdf_url_equivalence_is_narrow(self):
         self.assertEqual(qa.same_url("https://janedoe.dev"), qa.same_url("https://janedoe.dev/"))
         self.assertEqual(qa.same_url("HTTPS://Example.COM/a"), qa.same_url("https://example.com/a"))
