@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "achievements": [
+    {
+      "id": "northwind-charting",
+      "employer": "Northwind Health",
+      "dates": "Mar 2023 - Present",
+      "claim": "Cut clinician charting time 35% with a keyboard-first note editor and smart templates.",
+      "status": "candidate-stated",
+      "source": "profile/base-resume.example.md: Northwind Health, first bullet (fictional example)",
+      "problem": "Time spent on clinical documentation",
+      "contribution": "Keyboard-first note editor and smart templates",
+      "collaborators": null,
+      "method": null,
+      "skills": [],
+      "metrics": [
+        {
+          "name": "Clinician charting time reduction",
+          "baseline": null,
+          "result": 35,
+          "unit": "percent relative reduction",
+          "period": null,
+          "population": null,
+          "measurement_source": null,
+          "attribution": null,
+          "derived": false
+        }
+      ],
+      "artifacts": [],
+      "confidentiality": "Confirm what may be shared; no patient data.",
+      "open_questions": ["What baseline, measurement period, and population support this result?"],
+      "interview_story": null
+    }
+  ]
+}

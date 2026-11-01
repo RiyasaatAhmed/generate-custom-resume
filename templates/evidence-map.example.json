@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "requirements": [
+    {
+      "id": "workflow-ownership",
+      "requirement": "Build interfaces for clinical documentation",
+      "posting_source": "job-post.md: Responsibilities (fictional example)",
+      "importance": "responsibility",
+      "match": "direct",
+      "sources": [{"achievement_id": "northwind-charting"}],
+      "treatment": "Select the existing charting bullet; retain its stated scope and flag measurement questions."
+    },
+    {
+      "id": "workflow-engine",
+      "requirement": "Temporal experience preferred",
+      "posting_source": "job-post.md: Preferred qualifications (fictional example)",
+      "importance": "preferred",
+      "match": "missing",
+      "sources": [],
+      "treatment": "Do not claim Temporal experience; optional gap does not by itself disqualify the candidate."
+    }
+  ],
+  "eligibility": [
+    {
+      "requirement": "Work from an employer-supported country",
+      "posting_source": "job-post.md: Location (fictional example)",
+      "candidate_status": "unknown",
+      "candidate_source": null
+    }
+  ],
+  "recommendation": {
+    "decision": "clarify-first",
+    "reasons": ["Relevant clinical-interface evidence; employer hiring geography remains unknown."]
+  }
+}
