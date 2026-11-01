@@ -66,7 +66,7 @@ def render_html(data: dict, links, parse_honor) -> str:
         meta,
         *(f"<div class='contact'>{c}</div>" for c in contacts),
         "</header>",
-        f"<section><h2>Summary</h2><p class='summary'>{links.inline_to_html(data['summary'], skills=skills, kind='summary')}</p></section>",
+        (f"<section><h2>Summary</h2><p class='summary'>{links.inline_to_html(data['summary'], skills=skills, kind='summary')}</p></section>" if data["summary"] else ""),
     ]
 
     skills_parts = [
@@ -105,39 +105,41 @@ def render_html(data: dict, links, parse_honor) -> str:
 
     education_parts = []
     if data["education"]:
-        edu = data["education"]
-        education_parts.append(
-            f"<section><h2>Education</h2><div class='role-header'>"
-            f"<span class='role-title'>{html.escape(edu['degree'])}</span>"
-            f"<span class='role-date'>{html.escape(edu['dates'])}</span></div>"
-            f"<div class='company'>{html.escape(edu['detail'])}</div></section>"
-        )
+        education_parts.append("<section><h2>Education</h2>")
+        for edu in data["education"]:
+            education_parts.append(
+                f"<div class='role'><div class='role-header'>"
+                f"<span class='role-title'>{html.escape(edu['degree'])}</span>"
+                f"<span class='role-date'>{html.escape(edu['dates'])}</span></div>"
+            )
+            for detail in edu["details"]:
+                education_parts.append(f"<div>{links.inline_to_html(detail)}</div>")
+            education_parts.append("</div>")
+        education_parts.append("</section>")
 
-    honors_parts = []
-    if data["honors"]:
-        honors_parts.append("<section><h2>Honors &amp; Awards</h2>")
-    for entry in data["honors"]:
-        title, year, rest = parse_honor(entry[0])
-        suffix = f" ({year})" if year and year not in title else ""
-        honors_parts.append(
-            f"<div class='honor'><div class='honor-title'>"
-            f"{links.inline_to_html(title, skills=skills)}{html.escape(suffix)}</div>"
-        )
-        if rest:
-            honors_parts.append(f"<div>{links.inline_to_html(rest, skills=skills)}</div>")
-        for extra in entry[1:]:
-            honors_parts.append(f"<div>{links.inline_to_html(extra, skills=skills)}</div>")
-        honors_parts.append("</div>")
-    if data["honors"]:
-        honors_parts.append("</section>")
+    def extra_section(key: str, title: str) -> list[str]:
+        if not data[key]:
+            return []
+        result = [f"<section><h2>{html.escape(title)}</h2>"]
+        for line in data[key]:
+            if line.startswith("### "):
+                result.append(f"<div class='honor-title'>{links.inline_to_html(line[4:])}</div>")
+            elif line.startswith("- "):
+                result.append(f"<div>• {links.inline_to_html(line[2:])}</div>")
+            else:
+                result.append(f"<div>{links.inline_to_html(line)}</div>")
+        return result + ["</section>"]
 
     blocks = {
-        "skills": skills_parts,
-        "experience": experience_parts,
+        "skills": skills_parts if data["skills"] else [],
+        "experience": experience_parts if data["roles"] else [],
         "education": education_parts,
-        "honors": honors_parts,
+        "honors": extra_section("honors", "Honors & Awards"),
+        "projects": extra_section("projects", "Projects"),
+        "certifications": extra_section("certifications", "Certifications"),
+        "publications": extra_section("publications", "Publications"),
     }
-    default_order = ["skills", "experience", "education", "honors"]
+    default_order = ["skills", "experience", "education", "honors", "projects", "certifications", "publications"]
     order = [k for k in data.get("order") or default_order if k in blocks]
     for key in default_order:
         if key not in order:
@@ -149,54 +151,11 @@ def render_html(data: dict, links, parse_honor) -> str:
     return "".join(parts)
 
 
-def patch_pdf_links_new_tab(pdf_path: Path) -> None:
-    # ponytail: regex patch on Chrome headless URI actions; breaks if print format changes
-    pattern = rb"/A <</Type /Action\n/S /URI\n/URI \(([^)]+)\)>>"
-
-    def repl(m: re.Match[bytes]) -> bytes:
-        url = m.group(1)
-        if not url.startswith((b"http://", b"https://")):
-            return m.group(0)
-        return b"/A <</Type /Action\n/S /URI\n/URI (" + url + b")\n/NewWindow true>>"
-
-    data = pdf_path.read_bytes()
-    patched = re.sub(pattern, repl, data)
-    if re.search(pattern, data) and b"NewWindow" not in patched:
-        raise RuntimeError("PDF link patch failed: no NewWindow flags written")
-    pdf_path.write_bytes(rebuild_xref(patched))
-
-
-def rebuild_xref(data: bytes) -> bytes:
-    """Recompute the xref table after the link patch shifted object offsets.
-
-    Chrome writes one classic xref table with a single subsection, so every object
-    offset can be re-read from its `N 0 obj` header. Without this, strict PDF parsers
-    (some ATS uploads among them) see a broken file.
-    """
-    xref_at = data.rfind(b"\nxref\n")
-    if xref_at < 0:
-        return data
-    xref_at += 1
-    header = re.match(rb"xref\n0 (\d+)\n", data[xref_at:])
-    trailer_at = data.find(b"trailer", xref_at)
-    if not header or trailer_at < 0:
-        return data
-    size = int(header.group(1))
-    offsets = {int(m.group(1)): m.start() for m in re.finditer(rb"(?m)^(\d+) 0 obj\b", data[:xref_at])}
-    rows = [b"0000000000 65535 f \n"]
-    for num in range(1, size):
-        rows.append(b"%010d 00000 n \n" % offsets[num] if num in offsets else b"0000000000 65535 f \n")
-    trailer = data[trailer_at:]
-    trailer = re.sub(rb"startxref\n\d+", b"startxref\n%d" % xref_at, trailer)
-    return data[:xref_at] + b"xref\n0 %d\n" % size + b"".join(rows) + trailer
-
-
 def print_pdf(html_path: Path, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     kit.run_chrome(
         "--no-pdf-header-footer", f"--print-to-pdf={output.resolve()}", html_path.resolve().as_uri(), output=output
     )
-    patch_pdf_links_new_tab(output)
 
 
 def convert(md_path: Path, output: Path) -> None:
@@ -205,6 +164,7 @@ def convert(md_path: Path, output: Path) -> None:
     text = md_path.read_text(encoding="utf-8")
     text = re.sub(r"^<!--.*?-->\s*\n?", "", text, flags=re.MULTILINE)
     data = md_mod.parse_md(text)
+    output.parent.mkdir(parents=True, exist_ok=True)
     html_path = output.with_suffix(".html")
     html_path.write_text(render_html(data, links, md_mod.parse_honor), encoding="utf-8")
     print_pdf(html_path, output)
