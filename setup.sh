@@ -12,7 +12,7 @@ set -euo pipefail
 
 KIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CMD_NAME="generate-custom-resume"
-SKILLS=(cover-letter cover-letter-generator clarity)
+SKILLS=(generate-custom-resume cover-letter cover-letter-generator clarity)
 RETIRED_SKILLS=(humanizer-zh)   # removed from the kit; their old links get cleaned up
 TOOLS=(.claude .cursor)
 
@@ -33,7 +33,17 @@ link_skill() { # $1 = skills dir, $2 = skill name
   local dest="$1/$2"
   mkdir -p "$1"
   if [ -L "$dest" ]; then
-    ln -sfn "$KIT/skills/$2" "$dest"
+    local target
+    target="$(readlink "$dest")"
+    if [ "$target" = "$KIT/skills/$2" ]; then
+      ok "$dest already points to this kit"
+    elif [ ! -e "$dest" ] && [[ "$target" == */skills/"$2" ]]; then
+      # dangling link left behind when the kit folder moved; nothing to preserve
+      ln -sfn "$KIT/skills/$2" "$dest"
+      ok "$dest repointed from missing $target"
+    else
+      warn "$dest points elsewhere; left it alone (the command uses this kit's explicit path)"
+    fi
   elif [ -e "$dest" ]; then
     warn "$dest already exists and is not from this kit; left it alone"
     return
@@ -73,13 +83,16 @@ uninstall_global() {
 }
 
 GLOBAL=0
-case "${1:-}" in
-  --global) GLOBAL=1 ;;
-  --uninstall-global) uninstall_global; exit 0 ;;
-  -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
-  "") ;;
-  *) fail "unknown option: $1 (try --help)" ;;
-esac
+SKIP_SMOKE=0
+for option in "$@"; do
+  case "$option" in
+    --global) GLOBAL=1 ;;
+    --skip-smoke) SKIP_SMOKE=1 ;;
+    --uninstall-global) uninstall_global; exit 0 ;;
+    -h|--help) sed -n '2,10p' "$0"; echo '  --skip-smoke    install without running browser export'; exit 0 ;;
+    *) fail "unknown option: $option (try --help)" ;;
+  esac
+done
 
 bold "1. Checking requirements"
 command -v python3 >/dev/null || fail "python3 not found. Install Python 3.9+ from https://www.python.org/downloads/"
@@ -88,12 +101,18 @@ ok "$(python3 -V)"
 if CHROME="$(KIT_SCRIPTS="$KIT/scripts" python3 -c "import os, sys; sys.path.insert(0, os.environ['KIT_SCRIPTS']); import kit; print(kit.find_chrome())" 2>/dev/null)"; then
   ok "Chrome: $CHROME"
 else
-  fail "Google Chrome (or Chromium/Edge/Brave) not found. Install it, or set CHROME_PATH=/path/to/chrome"
+  warn "Chrome not found: DOCX export works; PDF export needs Chrome or CHROME_PATH."
+  SKIP_SMOKE=1
 fi
 if python3 -c 'import pypdf' 2>/dev/null; then
-  ok "pypdf installed (page-break check enabled)"
+  ok "pypdf installed (PDF content, link, and page checks enabled)"
 else
-  warn "pypdf not installed: optional, enables the page-break check. Install with: python3 -m pip install pypdf"
+  warn "pypdf not installed: PDF content/link/page checks will be skipped. Install with: python3 -m pip install pypdf"
+fi
+if command -v pdftoppm >/dev/null || python3 -c 'import pypdfium2, PIL' 2>/dev/null; then
+  ok "PDF page renderer available (actual page previews enabled)"
+else
+  warn "No PDF page renderer: previews skipped. Optional: install poppler (pdftoppm) or python3 -m pip install pypdfium2 pillow"
 fi
 
 bold "2. Creating your profile"
@@ -115,15 +134,13 @@ if [ "$GLOBAL" = 1 ]; then
   install_into "$HOME"
 fi
 
-bold "4. Smoke test: exporting the example resume"
-TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
-cp "$KIT/profile/base-resume.example.md" "$TMP/resume.md"
-RESUME_PROFILE="$KIT/profile/profile.example.json" python3 "$KIT/scripts/md_export.py" "$TMP/resume.md" >/dev/null \
-  || fail "export failed (see the error above)"
-RESUME_PROFILE="$KIT/profile/profile.example.json" python3 "$KIT/scripts/qa.py" "$TMP/resume.md" --no-screenshot >/dev/null \
-  || fail "QA failed on the example resume"
-ok "resume.md -> .docx + .pdf, parse QA passed"
+if [ "$SKIP_SMOKE" = 0 ]; then
+  bold "4. Smoke test: exporting the example resume"
+  RESUME_PROFILE="$KIT/profile/profile.example.json" python3 "$KIT/scripts/smoke.py" \
+    || fail "export smoke test failed (see the error above)"
+else
+  warn "Export smoke test skipped; run python3 scripts/smoke.py when Chrome is available."
+fi
 
 echo
 bold "Done."
