@@ -360,101 +360,8 @@ def extract_role_links(role: dict) -> None:
 
 
 def parse_md(text: str) -> dict:
-    lines = [ln.rstrip() for ln in text.splitlines()]
-    while lines and not lines[0].strip():
-        lines.pop(0)
-    data: dict = {
-        "name": "",
-        "headline": "",
-        "relocation": "",
-        "contacts": [],
-        "summary": "",
-        "skills": "",
-        "roles": [],
-        "education": None,
-        "honors": [],
-        "order": [],
-    }
-    i = 0
-    if lines and lines[0].startswith("# "):
-        data["name"] = lines[0][2:].strip()
-        i = 1
-    while i < len(lines):
-        raw = lines[i].strip()
-        if raw == "---" or raw.startswith("## "):
-            break
-        if raw:
-            if raw.startswith("**") and not data["headline"]:
-                data["headline"] = strip_md(raw)
-            elif "|" in raw or "@" in raw or "http" in raw:
-                data["contacts"].append(raw)
-            elif not data["relocation"]:
-                data["relocation"] = raw
-        i += 1
-    while i < len(lines):
-        line = lines[i]
-        if line.strip() == "---":
-            i += 1
-            continue
-        if line.startswith("## "):
-            section = line[3:].strip().lower()
-            i += 1
-            body: list[str] = []
-            while i < len(lines) and not lines[i].startswith("## ") and lines[i].strip() != "---":
-                if lines[i].strip():
-                    body.append(lines[i].strip())
-                i += 1
-            key = "honors" if section.startswith("honor") else section
-            if key in ("skills", "experience", "education", "honors") and key not in data["order"]:
-                data["order"].append(key)
-            if section == "summary":
-                data["summary"] = " ".join(body)
-            elif section == "skills":
-                data["skills"] = "\n".join(body)
-            elif section == "experience":
-                role = None
-                for ln in body:
-                    if ln.startswith("### "):
-                        role = {
-                            "title": ln[4:].strip(),
-                            "company": "",
-                            "company_name": "",
-                            "about": "",
-                            "dates": "",
-                            "bullets": [],
-                        }
-                        data["roles"].append(role)
-                    elif role and ln.startswith("- "):
-                        role["bullets"].append(ln[2:].strip())
-                    elif role and ln.strip():
-                        if is_company_line(ln):
-                            company, loc, dates = parse_company_line(ln)
-                            role["company_name"] = company
-                            role["company"] = f"{company}, {loc}" if loc else company
-                            role["dates"] = dates or role["dates"]
-                        elif role["company"] and not role["about"]:
-                            role["about"] = ln.strip()
-            elif section == "education":
-                deg = body[0] if body else ""
-                if "|" in deg:
-                    degree, dates = [x.strip() for x in deg.split("|", 1)]
-                    degree = degree.strip("* ")
-                else:
-                    degree, dates = deg.strip("* "), ""
-                detail = body[1].strip() if len(body) > 1 else ""
-                data["education"] = {"degree": degree, "dates": dates, "detail": detail}
-            elif section.startswith("honor"):
-                entry: list[str] = []
-                for ln in body:
-                    if ln.startswith("**") and entry:
-                        data["honors"].append(entry)
-                        entry = [ln]
-                    else:
-                        entry.append(ln)
-                if entry:
-                    data["honors"].append(entry)
-            continue
-        i += 1
+    model = kit.load_module("resume_model", "resume_model.py")
+    data = model.parse(text)
     for role in data["roles"]:
         extract_role_links(role)
     return data
@@ -483,16 +390,21 @@ def build_body(paras: list[ET.Element], data: dict, rels: RelManager) -> list[ET
     else:
         for idx, raw in enumerate(data["contacts"]):
             add("contact1" if idx == 0 else "contact2", lambda p, t=raw: set_styled_text(p, t, rels))
-    spacer()
-    add("summary", lambda p: set_styled_text(p, auto_bold(data["summary"], skills, "summary"), rels))
-    spacer()
+    if data["summary"]:
+        spacer()
+        add("summary", lambda p: set_styled_text(p, auto_bold(data["summary"], skills, "summary"), rels))
+        spacer()
     def render_skills() -> None:
+        if not data["skills"]:
+            return
         add("section", lambda p: set_plain(p, "SKILLS"))
         for skill_line in (l for l in data["skills"].splitlines() if l.strip()):
             add("skills", lambda p, s=skill_line: set_skill_line(p, s))
         spacer()
 
     def render_experience() -> None:
+        if not data["roles"]:
+            return
         add("section", lambda p: set_plain(p, "EXPERIENCE"))
         for role in data["roles"]:
             add("role_header", lambda p, r=role: set_tabbed_header(p, r["title"], r["dates"]))
@@ -511,31 +423,34 @@ def build_body(paras: list[ET.Element], data: dict, rels: RelManager) -> list[ET
         if not data["education"]:
             return
         add("section", lambda p: set_plain(p, "EDUCATION"))
-        edu = data["education"]
-        add("edu_header", lambda p, d=edu: set_tabbed_header(p, d["degree"], d["dates"]))
-        add("edu_detail", lambda p, d=edu: set_plain(p, d["detail"]))
+        for edu in data["education"]:
+            add("edu_header", lambda p, d=edu: set_tabbed_header(p, d["degree"], d["dates"]))
+            for detail in edu["details"]:
+                add("edu_detail", lambda p, t=detail: set_styled_text(p, t, rels))
 
-    def render_honors() -> None:
-        if not data["honors"]:
+    def render_extra(key: str, title: str) -> None:
+        if not data[key]:
             return
         spacer()
-        add("section", lambda p: set_plain(p, "HONORS & AWARDS"))
-        for entry in data["honors"]:
-            title, year, rest = parse_honor(entry[0])
-            add("honor_header", lambda p, t=title, y=year: set_tabbed_header(p, t, y))
-            if rest:
-                add("honor_sub", lambda p, r=rest: set_styled_text(p, auto_bold(r, skills, "bullet"), rels))
-            for extra in entry[1:]:
-                add("honor_body", lambda p, t=extra: set_styled_text(p, auto_bold(t, skills, "bullet"), rels))
-            spacer()
+        add("section", lambda p: set_plain(p, title.upper()))
+        for line in data[key]:
+            if line.startswith("### "):
+                add("honor_header", lambda p, t=line[4:]: set_styled_text(p, t, rels))
+            elif line.startswith("- "):
+                add("bullet", lambda p, t=line[2:]: set_bullet_line(p, t, rels, "", skills))
+            else:
+                add("honor_body", lambda p, t=line: set_styled_text(p, t, rels))
 
     renderers = {
         "skills": render_skills,
         "experience": render_experience,
         "education": render_education,
-        "honors": render_honors,
+        "honors": lambda: render_extra("honors", "Honors & Awards"),
+        "projects": lambda: render_extra("projects", "Projects"),
+        "certifications": lambda: render_extra("certifications", "Certifications"),
+        "publications": lambda: render_extra("publications", "Publications"),
     }
-    default_order = ["skills", "experience", "education", "honors"]
+    default_order = ["skills", "experience", "education", "honors", "projects", "certifications", "publications"]
     order = [k for k in data.get("order") or default_order if k in renderers]
     for key in default_order:
         if key not in order:
