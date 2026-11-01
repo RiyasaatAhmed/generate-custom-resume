@@ -23,7 +23,8 @@ research unless the candidate has actually used it.
 
 Preserve candidate writing preferences. Otherwise use plain language, modest emphasis,
 and a clear mechanism. Punctuation and individual words are not evidence of authorship.
-Manual bold is supported; profile auto-bold remains optional.
+Manual bold is supported; profile auto-bold remains optional. An editing skill may change
+only the summary, and only when the candidate's notes ask (see [editing](editing.md)).
 
 The exporter accepts this Markdown dialect:
 

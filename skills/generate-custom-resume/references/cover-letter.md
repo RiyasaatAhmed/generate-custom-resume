@@ -22,8 +22,8 @@ is held; answer required questions honestly; explain transferable evidence when 
 Do not list every optional weakness or claim a learning plan unless confirmed.
 
 Run one editorial pass for unsupported claims, vague actors, repeated content, excessive
-jargon, and generic employer rationale. Clarity may assist using its rewrite guidance,
-but is optional; preserve its factual and formatting safeguards. Do not force a short
+jargon, and generic employer rationale. If the candidate's notes name an editing skill,
+follow [the editing pass](editing.md), which guards facts after the edit. Do not force a short
 sentence into every paragraph or ban ordinary first-person ownership. A candidate's
 explicit punctuation preferences still apply.
 

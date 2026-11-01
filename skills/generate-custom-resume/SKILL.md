@@ -70,7 +70,8 @@ search/fetch tools; if blocked, ask for the posting text. Do not guess the missi
    Follow the posting's instructions. For a full package, default to a concise cover letter
    (unless the posting rules one out) plus one outreach draft for the most relevant
    channel; do not generate every channel.
-   Draft post-application wording only when submission is confirmed.
+   Draft post-application wording only when submission is confirmed. Then apply
+   [the editing pass](references/editing.md) to the drafts it covers.
 6. **Add proof or interview preparation when useful.** Read [proof and interviews](references/proof-interview.md).
    Recommend an existing artifact first. Do not build a substantial unsolicited project.
 7. **Record and deliver.** Read [application records](references/records.md). Generation

@@ -26,6 +26,8 @@ Use plain text by default. Unicode mathematical bold is an optional legacy style
 required; avoid it when accessibility or the destination makes it unsuitable. Generate
 it with `outreach.py bold` if requested. Do not impose a metric in every sentence.
 Never introduce a new unsupported claim simply because the outreach is shorter.
+If the notes name an editing skill, follow [the editing pass](editing.md); the candidate's
+verbatim opener and closer are protected lines it must not touch.
 
 Store a message in `outreach/<channel>.txt`. For email/InMail, put bare subject options
 above the `// ---` separator; comments beginning `//` may label the recommended option.
