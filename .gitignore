@@ -1,0 +1,15 @@
+# Your personal data stays local. Only the *.example.* files are tracked.
+profile/*
+!profile/*.example.*
+
+# Generated applications (resumes, cover letters, outreach)
+applications/*
+!applications/.gitkeep
+
+# Rendered by setup.sh with this machine's absolute path
+.claude/
+.cursor/
+
+__pycache__/
+*.pyc
+.DS_Store
