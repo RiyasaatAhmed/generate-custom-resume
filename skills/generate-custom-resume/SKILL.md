@@ -67,8 +67,9 @@ search/fetch tools; if blocked, ask for the posting text. Do not guess the missi
    checks. Continue independent letter/outreach work while resolving export issues.
 5. **Prepare the appropriate letter/outreach.** Read [cover letters](references/cover-letter.md)
    and/or [outreach](references/outreach.md) only for requested/appropriate deliverables.
-   Follow the posting's instructions. Default the full-package command to a concise letter
-   unless prohibited and one relevant outreach draft; do not generate every channel.
+   Follow the posting's instructions. For a full package, default to a concise cover letter
+   (unless the posting rules one out) plus one outreach draft for the most relevant
+   channel; do not generate every channel.
    Draft post-application wording only when submission is confirmed.
 6. **Add proof or interview preparation when useful.** Read [proof and interviews](references/proof-interview.md).
    Recommend an existing artifact first. Do not build a substantial unsolicited project.
